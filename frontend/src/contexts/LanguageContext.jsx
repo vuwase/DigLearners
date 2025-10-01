@@ -1,0 +1,546 @@
+// Language Context - Multilingual Support (English/Kinyarwanda)
+import React, { createContext, useContext, useState, useEffect } from 'react'
+
+const LanguageContext = createContext()
+
+export const useLanguage = () => {
+  const context = useContext(LanguageContext)
+  if (!context) {
+    throw new Error('useLanguage must be used within a LanguageProvider')
+  }
+  return context
+}
+
+const translations = {
+  en: {
+    // Navigation
+    'nav.lessons': 'Lessons',
+    'nav.student': 'Student',
+    'nav.teacher': 'Teacher',
+    'nav.parent': 'Parent',
+    'nav.leaderboard': 'Leaderboard',
+    'nav.research': 'Research',
+    'nav.admin': 'Admin',
+    'nav.login': 'Login',
+    'nav.register': 'Register',
+    'nav.logout': 'Logout',
+    'nav.profile': 'Profile',
+    'nav.settings': 'Settings',
+
+    // Common
+    'common.loading': 'Loading...',
+    'common.error': 'Error',
+    'common.success': 'Success',
+    'common.points': 'points',
+    'common.pts': 'pts',
+    'common.badges': 'badges',
+    'common.back': 'Back',
+    'common.next': 'Next',
+    'common.previous': 'Previous',
+    'common.save': 'Save',
+    'common.cancel': 'Cancel',
+    'common.delete': 'Delete',
+    'common.edit': 'Edit',
+    'common.add': 'Add',
+    'common.search': 'Search',
+    'common.filter': 'Filter',
+    'common.sort': 'Sort',
+    'common.refresh': 'Refresh',
+    'common.retry': 'Retry',
+    'common.close': 'Close',
+    'common.confirm': 'Confirm',
+    'common.yes': 'Yes',
+    'common.no': 'No',
+
+    // Authentication
+    'auth.login': 'Login',
+    'auth.register': 'Register',
+    'auth.logout': 'Logout',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.confirmPassword': 'Confirm Password',
+    'auth.fullName': 'Full Name',
+    'auth.role': 'Role',
+    'auth.loginSuccess': 'Login successful!',
+    'auth.registerSuccess': 'Registration successful!',
+    'auth.logoutSuccess': 'Logout successful!',
+    'auth.invalidCredentials': 'Invalid email or password',
+    'auth.emailRequired': 'Email is required',
+    'auth.passwordRequired': 'Password is required',
+    'auth.passwordMismatch': 'Passwords do not match',
+    'auth.emailInvalid': 'Please enter a valid email address',
+    'auth.passwordTooShort': 'Password must be at least 6 characters',
+    'auth.userExists': 'User with this email already exists',
+    'auth.loginError': 'Login failed. Please try again.',
+    'auth.registerError': 'Registration failed. Please try again.',
+
+    // Roles
+    'role.learner': 'Learner',
+    'role.teacher': 'Teacher',
+    'role.parent': 'Parent',
+    'role.admin': 'Administrator',
+    'role.selectRole': 'Select your role',
+    'role.roleDescription.learner': 'I am a student learning digital literacy',
+    'role.roleDescription.teacher': 'I am a teacher managing students and lessons',
+    'role.roleDescription.parent': 'I am a parent monitoring my child\'s progress',
+    'role.roleDescription.admin': 'I am an administrator managing the platform',
+
+    // Student Dashboard
+    'student.welcome': 'Welcome back',
+    'student.dashboard': 'Student Dashboard',
+    'student.progress': 'My Progress',
+    'student.lessons': 'My Lessons',
+    'student.badges': 'My Badges',
+    'student.achievements': 'Achievements',
+    'student.level': 'Level',
+    'student.points': 'Points',
+    'student.streak': 'Day Streak',
+    'student.lessonsCompleted': 'Lessons Completed',
+    'student.badgesEarned': 'Badges Earned',
+    'student.totalPoints': 'Total Points',
+    'student.recentActivity': 'Recent Activity',
+    'student.continueLearning': 'Continue Learning',
+    'student.startLesson': 'Start Lesson',
+    'student.resumeLesson': 'Resume Lesson',
+    'student.completeLesson': 'Complete Lesson',
+    'student.newBadge': 'New Badge Earned!',
+    'student.levelUp': 'Level Up!',
+    'student.achievementUnlocked': 'Achievement Unlocked!',
+
+    // Teacher Dashboard
+    'teacher.dashboard': 'Teacher Dashboard',
+    'teacher.classes': 'My Classes',
+    'teacher.students': 'My Students',
+    'teacher.lessons': 'Lessons',
+    'teacher.progress': 'Student Progress',
+    'teacher.analytics': 'Analytics',
+    'teacher.createClass': 'Create Class',
+    'teacher.assignLesson': 'Assign Lesson',
+    'teacher.viewProgress': 'View Progress',
+    'teacher.manageStudents': 'Manage Students',
+    'teacher.classOverview': 'Class Overview',
+    'teacher.studentProgress': 'Student Progress',
+    'teacher.lessonStats': 'Lesson Statistics',
+    'teacher.engagement': 'Engagement Metrics',
+
+    // Parent Dashboard
+    'parent.dashboard': 'Parent Dashboard',
+    'parent.children': 'My Children',
+    'parent.progress': 'Child Progress',
+    'parent.achievements': 'Child Achievements',
+    'parent.activities': 'Recent Activities',
+    'parent.overview': 'Overview',
+    'parent.detailedProgress': 'Detailed Progress',
+    'parent.weeklyReport': 'Weekly Report',
+    'parent.monthlyReport': 'Monthly Report',
+    'parent.achievements': 'Achievements',
+    'parent.badges': 'Badges Earned',
+    'parent.timeSpent': 'Time Spent Learning',
+    'parent.lessonsCompleted': 'Lessons Completed',
+    'parent.averageScore': 'Average Score',
+
+    // Admin Dashboard
+    'admin.dashboard': 'Admin Dashboard',
+    'admin.users': 'User Management',
+    'admin.classes': 'Class Management',
+    'admin.lessons': 'Lesson Management',
+    'admin.analytics': 'Platform Analytics',
+    'admin.settings': 'System Settings',
+    'admin.reports': 'Reports',
+    'admin.userStats': 'User Statistics',
+    'admin.lessonStats': 'Lesson Statistics',
+    'admin.engagementStats': 'Engagement Statistics',
+    'admin.systemHealth': 'System Health',
+    'admin.dataExport': 'Data Export',
+    'admin.backup': 'Backup & Restore',
+
+    // Lessons
+    'lesson.title': 'Lesson',
+    'lesson.lessons': 'Lessons',
+    'lesson.start': 'Start Lesson',
+    'lesson.resume': 'Resume Lesson',
+    'lesson.complete': 'Complete Lesson',
+    'lesson.progress': 'Progress',
+    'lesson.score': 'Score',
+    'lesson.timeSpent': 'Time Spent',
+    'lesson.attempts': 'Attempts',
+    'lesson.difficulty': 'Difficulty',
+    'lesson.duration': 'Duration',
+    'lesson.type': 'Type',
+    'lesson.typing': 'Typing',
+    'lesson.safety': 'Internet Safety',
+    'lesson.coding': 'Coding',
+    'lesson.general': 'General',
+    'lesson.beginner': 'Beginner',
+    'lesson.intermediate': 'Intermediate',
+    'lesson.advanced': 'Advanced',
+    'lesson.completed': 'Completed',
+    'lesson.inProgress': 'In Progress',
+    'lesson.notStarted': 'Not Started',
+    'lesson.congratulations': 'Congratulations!',
+    'lesson.wellDone': 'Well done!',
+    'lesson.tryAgain': 'Try Again',
+    'lesson.nextLesson': 'Next Lesson',
+    'lesson.previousLesson': 'Previous Lesson',
+
+    // Gamification
+    'gamification.badges': 'Badges',
+    'gamification.achievements': 'Achievements',
+    'gamification.leaderboard': 'Leaderboard',
+    'gamification.points': 'Points',
+    'gamification.level': 'Level',
+    'gamification.streak': 'Streak',
+    'gamification.rank': 'Rank',
+    'gamification.progress': 'Progress',
+    'gamification.earned': 'Earned',
+    'gamification.available': 'Available',
+    'gamification.criteria': 'Criteria',
+    'gamification.description': 'Description',
+    'gamification.icon': 'Icon',
+    'gamification.category': 'Category',
+    'gamification.achievement': 'Achievement',
+    'gamification.milestone': 'Milestone',
+    'gamification.special': 'Special',
+    'gamification.weekly': 'Weekly',
+    'gamification.monthly': 'Monthly',
+
+    // Errors
+    'error.general': 'Something went wrong. Please try again.',
+    'error.network': 'Network error. Please check your connection.',
+    'error.unauthorized': 'You are not authorized to perform this action.',
+    'error.forbidden': 'Access denied.',
+    'error.notFound': 'The requested resource was not found.',
+    'error.serverError': 'Server error. Please try again later.',
+    'error.validation': 'Please check your input and try again.',
+    'error.loading': 'Failed to load data. Please try again.',
+    'error.saving': 'Failed to save data. Please try again.',
+    'error.deleting': 'Failed to delete. Please try again.',
+    'error.uploading': 'Failed to upload. Please try again.',
+    'error.downloading': 'Failed to download. Please try again.',
+
+    // Success Messages
+    'success.saved': 'Data saved successfully!',
+    'success.deleted': 'Deleted successfully!',
+    'success.uploaded': 'Uploaded successfully!',
+    'success.downloaded': 'Downloaded successfully!',
+    'success.updated': 'Updated successfully!',
+    'success.created': 'Created successfully!',
+    'success.completed': 'Completed successfully!',
+    'success.achievement': 'Achievement unlocked!',
+    'success.badge': 'Badge earned!',
+    'success.levelUp': 'Level up!',
+
+    // Accessibility
+    'accessibility.highContrast': 'High Contrast',
+    'accessibility.largeText': 'Large Text',
+    'accessibility.screenReader': 'Screen Reader',
+    'accessibility.keyboard': 'Keyboard Navigation',
+    'accessibility.audio': 'Audio Descriptions',
+    'accessibility.captions': 'Captions',
+    'accessibility.zoom': 'Zoom',
+    'accessibility.colorBlind': 'Color Blind Support',
+    'accessibility.motor': 'Motor Assistance',
+    'accessibility.cognitive': 'Cognitive Support',
+
+    // Research Dashboard
+    'research.dashboard': 'Research Dashboard',
+    'research.analytics': 'Analytics',
+    'research.metrics': 'Metrics',
+    'research.export': 'Export Data',
+    'research.reports': 'Reports',
+    'research.insights': 'Insights',
+    'research.data': 'Data Collection',
+    'research.usage': 'Usage Statistics',
+    'research.engagement': 'Engagement Metrics',
+    'research.learning': 'Learning Outcomes',
+    'research.accessibility': 'Accessibility Usage',
+    'research.language': 'Language Preferences',
+    'research.connectivity': 'Connectivity Patterns'
+  },
+  rw: {
+    // Navigation
+    'nav.lessons': 'Amasomo',
+    'nav.student': 'Umunyeshuri',
+    'nav.teacher': 'Umwarimu',
+    'nav.parent': 'Umubyeyi',
+    'nav.leaderboard': 'Urutonde',
+    'nav.research': 'Ubushakashatsi',
+    'nav.admin': 'Umuyobozi',
+    'nav.login': 'Winjira',
+    'nav.register': 'Iyandikishe',
+    'nav.logout': 'Sohoka',
+    'nav.profile': 'Umwirondoro',
+    'nav.settings': 'Igenamiterere',
+
+    // Common
+    'common.loading': 'Birakora...',
+    'common.error': 'Ikosa',
+    'common.success': 'Byakunze',
+    'common.points': 'amanota',
+    'common.pts': 'amanota',
+    'common.badges': 'ibimenyetso',
+    'common.back': 'Subira inyuma',
+    'common.next': 'Ikurikira',
+    'common.previous': 'Ibanjirije',
+    'common.save': 'Bika',
+    'common.cancel': 'Hagarika',
+    'common.delete': 'Siba',
+    'common.edit': 'Hindura',
+    'common.add': 'Ongeraho',
+    'common.search': 'Shakisha',
+    'common.filter': 'Suzuma',
+    'common.sort': 'Gena',
+    'common.refresh': 'Ongera ugerageze',
+    'common.retry': 'Ongera ugerageze',
+    'common.close': 'Funga',
+    'common.confirm': 'Emeza',
+    'common.yes': 'Yego',
+    'common.no': 'Oya',
+
+    // Authentication
+    'auth.login': 'Winjira',
+    'auth.register': 'Iyandikishe',
+    'auth.logout': 'Sohoka',
+    'auth.email': 'Imeli',
+    'auth.password': 'Ijambo ry\'ibanga',
+    'auth.confirmPassword': 'Emeza ijambo ry\'ibanga',
+    'auth.fullName': 'Amazina yose',
+    'auth.role': 'Uruhare',
+    'auth.loginSuccess': 'Winjiye neza!',
+    'auth.registerSuccess': 'Wiyandikishije neza!',
+    'auth.logoutSuccess': 'Wasohotse neza!',
+    'auth.invalidCredentials': 'Imeli cyangwa ijambo ry\'ibanga si byiza',
+    'auth.emailRequired': 'Imeli ni ngombwa',
+    'auth.passwordRequired': 'Ijambo ry\'ibanga ni ngombwa',
+    'auth.passwordMismatch': 'Amajambo y\'ibanga atari kimwe',
+    'auth.emailInvalid': 'Shyiramo imeli y\'ukuri',
+    'auth.passwordTooShort': 'Ijambo ry\'ibanga rigomba kuba rigira uburebure buhagije',
+    'auth.userExists': 'Umukoresha w\'iyi imeli yarimo',
+    'auth.loginError': 'Kwinjira byanze. Ongera ugerageze.',
+    'auth.registerError': 'Kwiyandikisha byanze. Ongera ugerageze.',
+
+    // Roles
+    'role.learner': 'Umunyeshuri',
+    'role.teacher': 'Umwarimu',
+    'role.parent': 'Umubyeyi',
+    'role.admin': 'Umuyobozi',
+    'role.selectRole': 'Hitamo uruhare rwawe',
+    'role.roleDescription.learner': 'Ndi umunyeshuri wiga ubumenyi bwa digital',
+    'role.roleDescription.teacher': 'Ndi umwarimu wita ku banyeshuri n\'amasomo',
+    'role.roleDescription.parent': 'Ndi umubyeyi witegereza intambwe y\'umwana wanjye',
+    'role.roleDescription.admin': 'Ndi umuyobozi wita ku sisiteme',
+
+    // Student Dashboard
+    'student.welcome': 'Murakaza neza',
+    'student.dashboard': 'Ikibaho cy\'Umunyeshuri',
+    'student.progress': 'Intambwe yanjye',
+    'student.lessons': 'Amasomo yanjye',
+    'student.badges': 'Ibimenyetso byanjye',
+    'student.achievements': 'Intsinzi',
+    'student.level': 'Urwego',
+    'student.points': 'Amanota',
+    'student.streak': 'Iminsi Ikurikirana',
+    'student.lessonsCompleted': 'Amasomo Yarangiye',
+    'student.badgesEarned': 'Ibimenyetso Mwabonye',
+    'student.totalPoints': 'Amanota Yose',
+    'student.recentActivity': 'Ibikorwa Biheruka',
+    'student.continueLearning': 'Komeza Kwiga',
+    'student.startLesson': 'Tangira Isomo',
+    'student.resumeLesson': 'Komeza Isomo',
+    'student.completeLesson': 'Rangiza Isomo',
+    'student.newBadge': 'Ikimenyetso Gishya Mwabonye!',
+    'student.levelUp': 'Wazamutse!',
+    'student.achievementUnlocked': 'Intsinzi Ryasohoye!',
+
+    // Teacher Dashboard
+    'teacher.dashboard': 'Ikibaho cy\'Umwarimu',
+    'teacher.classes': 'Amashuri yanjye',
+    'teacher.students': 'Abanyeshuri banjye',
+    'teacher.lessons': 'Amasomo',
+    'teacher.progress': 'Intambwe y\'Abanyeshuri',
+    'teacher.analytics': 'Ibisobanuro',
+    'teacher.createClass': 'Kora Isomo',
+    'teacher.assignLesson': 'Tanga Isomo',
+    'teacher.viewProgress': 'Reba Intambwe',
+    'teacher.manageStudents': 'Genzura Abanyeshuri',
+    'teacher.classOverview': 'Incamake y\'Isomo',
+    'teacher.studentProgress': 'Intambwe y\'Umunyeshuri',
+    'teacher.lessonStats': 'Ibisobanuro by\'Isomo',
+    'teacher.engagement': 'Ibisobanuro by\'Ubufatanye',
+
+    // Parent Dashboard
+    'parent.dashboard': 'Ikibaho cy\'Umubyeyi',
+    'parent.children': 'Abana banjye',
+    'parent.progress': 'Intambwe y\'Umwana',
+    'parent.achievements': 'Intsinzi z\'Umwana',
+    'parent.activities': 'Ibikorwa Biheruka',
+    'parent.overview': 'Incamake',
+    'parent.detailedProgress': 'Intambwe y\'Uruhare',
+    'parent.weeklyReport': 'Raporo y\'Icyumweru',
+    'parent.monthlyReport': 'Raporo y\'Ukwezi',
+    'parent.achievements': 'Intsinzi',
+    'parent.badges': 'Ibimenyetso Byabonye',
+    'parent.timeSpent': 'Igihe Cyakoreshejwe',
+    'parent.lessonsCompleted': 'Amasomo Yarangiye',
+    'parent.averageScore': 'Amanota y\'Ubwigenge',
+
+    // Admin Dashboard
+    'admin.dashboard': 'Ikibaho cy\'Umuyobozi',
+    'admin.users': 'Genzura Abakoresha',
+    'admin.classes': 'Genzura Amashuri',
+    'admin.lessons': 'Genzura Amasomo',
+    'admin.analytics': 'Ibisobanuro by\'Ubwoba',
+    'admin.settings': 'Igenamiterere',
+    'admin.reports': 'Raporo',
+    'admin.userStats': 'Ibisobanuro by\'Abakoresha',
+    'admin.lessonStats': 'Ibisobanuro by\'Amasomo',
+    'admin.engagementStats': 'Ibisobanuro by\'Ubufatanye',
+    'admin.systemHealth': 'Ubuzima bwa Sisiteme',
+    'admin.dataExport': 'Kuramo Amakuru',
+    'admin.backup': 'Gukingira no Kugarura',
+
+    // Lessons
+    'lesson.title': 'Isomo',
+    'lesson.lessons': 'Amasomo',
+    'lesson.start': 'Tangira Isomo',
+    'lesson.resume': 'Komeza Isomo',
+    'lesson.complete': 'Rangiza Isomo',
+    'lesson.progress': 'Intambwe',
+    'lesson.score': 'Amanota',
+    'lesson.timeSpent': 'Igihe Cyakoreshejwe',
+    'lesson.attempts': 'Igerageza',
+    'lesson.difficulty': 'Ubukomeye',
+    'lesson.duration': 'Igihe',
+    'lesson.type': 'Ubwoko',
+    'lesson.typing': 'Kwandika',
+    'lesson.safety': 'Kurinda mu Internet',
+    'lesson.coding': 'Gukora Code',
+    'lesson.general': 'Ubwoba',
+    'lesson.beginner': 'Umutangizi',
+    'lesson.intermediate': 'Uruhare',
+    'lesson.advanced': 'Uruhare rwo hejuru',
+    'lesson.completed': 'Byarangiye',
+    'lesson.inProgress': 'Birakora',
+    'lesson.notStarted': 'Ntibyatangijwe',
+    'lesson.congratulations': 'Urakoze!',
+    'lesson.wellDone': 'Byakunze!',
+    'lesson.tryAgain': 'Ongera ugerageze',
+    'lesson.nextLesson': 'Isomo Rikurikira',
+    'lesson.previousLesson': 'Isomo Ryabanjirije',
+
+    // Gamification
+    'gamification.badges': 'Ibimenyetso',
+    'gamification.achievements': 'Intsinzi',
+    'gamification.leaderboard': 'Urutonde',
+    'gamification.points': 'Amanota',
+    'gamification.level': 'Urwego',
+    'gamification.streak': 'Ikurikirana',
+    'gamification.rank': 'Urwego',
+    'gamification.progress': 'Intambwe',
+    'gamification.earned': 'Byabonye',
+    'gamification.available': 'Birahari',
+    'gamification.criteria': 'Ibyifuzo',
+    'gamification.description': 'Ibisobanuro',
+    'gamification.icon': 'Ikimenyetso',
+    'gamification.category': 'Icyiciro',
+    'gamification.achievement': 'Intsinzi',
+    'gamification.milestone': 'Intambwe',
+    'gamification.special': 'Byihariye',
+    'gamification.weekly': 'Icyumweru',
+    'gamification.monthly': 'Ukwezi',
+
+    // Errors
+    'error.general': 'Ikintu kirakomeje. Ongera ugerageze.',
+    'error.network': 'Ikosa ry\'uruganda. Reba ko uruganda rwawe rukora neza.',
+    'error.unauthorized': 'Nta bushobozi bwo gukora iki gikorwa.',
+    'error.forbidden': 'Nta bushobozi bwo kwinjira.',
+    'error.notFound': 'Icyo ushakaga ntabwo cyabonetse.',
+    'error.serverError': 'Ikosa ry\'seriveri. Ongera ugerageze nyuma.',
+    'error.validation': 'Reba ko wakoze neza kandi ongera ugerageze.',
+    'error.loading': 'Ntabwo byashobotse gutegura amakuru. Ongera ugerageze.',
+    'error.saving': 'Ntabwo byashobotse kubika amakuru. Ongera ugerageze.',
+    'error.deleting': 'Ntabwo byashobotse gusiba. Ongera ugerageze.',
+    'error.uploading': 'Ntabwo byashobotse kwinjiza. Ongera ugerageze.',
+    'error.downloading': 'Ntabwo byashobotse kumanura. Ongera ugerageze.',
+
+    // Success Messages
+    'success.saved': 'Amakuru yabikijwe neza!',
+    'success.deleted': 'Yasibwe neza!',
+    'success.uploaded': 'Yinjiye neza!',
+    'success.downloaded': 'Yamanuwe neza!',
+    'success.updated': 'Yahinduwe neza!',
+    'success.created': 'Yakozwe neza!',
+    'success.completed': 'Byarangiye neza!',
+    'success.achievement': 'Intsinzi ryasohoye!',
+    'success.badge': 'Ikimenyetso cyabonye!',
+    'success.levelUp': 'Wazamutse!',
+
+    // Accessibility
+    'accessibility.highContrast': 'Gutandukanya ibara',
+    'accessibility.largeText': 'Inyandiko Nini',
+    'accessibility.screenReader': 'Soma Inyandiko',
+    'accessibility.keyboard': 'Gukoresha Urufunguzo',
+    'accessibility.audio': 'Ibisobanuro by\'Ijwi',
+    'accessibility.captions': 'Ibisobanuro',
+    'accessibility.zoom': 'Kongera',
+    'accessibility.colorBlind': 'Gufasha Abantu batabona ibara',
+    'accessibility.motor': 'Gufasha Abantu batagira ubushobozi',
+    'accessibility.cognitive': 'Gufasha Ubwoba',
+
+    // Research Dashboard
+    'research.dashboard': 'Ikibaho cy\'Ubushakashatsi',
+    'research.analytics': 'Ibisobanuro',
+    'research.metrics': 'Ibisobanuro',
+    'research.export': 'Kuramo Amakuru',
+    'research.reports': 'Raporo',
+    'research.insights': 'Ibisobanuro',
+    'research.data': 'Gukusanya Amakuru',
+    'research.usage': 'Ibisobanuro by\'Ukoresha',
+    'research.engagement': 'Ibisobanuro by\'Ubufatanye',
+    'research.learning': 'Ibyo Wize',
+    'research.accessibility': 'Ukoresha Ibyo Bifasha',
+    'research.language': 'Ibyifuzo by\'Ururimi',
+    'research.connectivity': 'Ibisobanuro by\'Uruganda'
+  }
+}
+
+export const LanguageProvider = ({ children }) => {
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('diglearners-language') || 'en'
+  })
+
+  useEffect(() => {
+    localStorage.setItem('diglearners-language', language)
+  }, [language])
+
+  const t = (key, params = {}) => {
+    let translation = translations[language]?.[key] || key
+    
+    // Replace parameters in translation
+    Object.keys(params).forEach(param => {
+      translation = translation.replace(`{${param}}`, params[param])
+    })
+    
+    return translation
+  }
+
+  const changeLanguage = (newLanguage) => {
+    setLanguage(newLanguage)
+  }
+
+  const value = {
+    language,
+    t,
+    changeLanguage,
+    availableLanguages: [
+      { code: 'en', name: 'English', flag: '🇺🇸' },
+      { code: 'rw', name: 'Kinyarwanda', flag: '🇷🇼' }
+    ]
+  }
+
+  return (
+    <LanguageContext.Provider value={value}>
+      {children}
+    </LanguageContext.Provider>
+  )
+}

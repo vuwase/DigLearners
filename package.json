@@ -1,0 +1,19 @@
+{
+  "name": "diglearners",
+  "version": "1.0.0",
+  "description": "DigLearners - Digital Literacy Platform for Rwandan Primary Schools",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run dev"
+  },
+  "keywords": ["education", "digital-literacy", "rwanda", "react", "node"],
+  "author": "DigLearners Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
