@@ -241,6 +241,11 @@ cd backend
 npm run seed       # Seed initial data
 ```
 
+## Deployment plan
+
+- vercel for frontend
+- Render for backend
+
 ## 📚 API Documentation
 
 ### Authentication Endpoints
@@ -324,3 +329,5 @@ For support and questions:
 ---
 
 **DigLearners Platform** - Empowering digital literacy in Rwandan primary schools through innovative technology and research-driven design.
+
+Link to the video : 
