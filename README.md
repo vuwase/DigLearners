@@ -169,12 +169,14 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 - Lesson assignment and progress monitoring
 - Analytics and reporting tools
 - Content creation (Admin level)
+- Enroll child
 
 ### Parent Interface
 - Child progress monitoring
 - Achievement tracking
 - Time spent analytics
 - Weekly/monthly reports
+- Enroll child
 
 ### Admin Interface
 - User management
