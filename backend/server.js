@@ -107,20 +107,20 @@ app.use('*', (req, res) => {
 const startServer = async () => {
   try {
     // Initialize database
-    console.log('🔄 Initializing database...')
+    console.log('Initializing database...')
     await initializeDatabase()
-    console.log('✅ Database initialized successfully')
+    console.log('Database initialized successfully')
 
     // Start server
     app.listen(PORT, () => {
       console.log('═══════════════════════════════════════════════════════')
-      console.log(`🚀 DigLearners Backend running on http://localhost:${PORT}`)
+      console.log(`DigLearners Backend running on http://localhost:${PORT}`)
       console.log('═══════════════════════════════════════════════════════')
-      console.log(`📊 Health check: http://localhost:${PORT}/health`)
-      console.log(`🧪 Test endpoint: http://localhost:${PORT}/api/test`)
-      console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth`)
-      console.log(`📚 Content API: http://localhost:${PORT}/api/content`)
-      console.log(`🎓 Learning API: http://localhost:${PORT}/api/learning`)
+      console.log(`Health check: http://localhost:${PORT}/health`)
+      console.log(`Test endpoint: http://localhost:${PORT}/api/test`)
+      console.log(`Auth API: http://localhost:${PORT}/api/auth`)
+      console.log(`Content API: http://localhost:${PORT}/api/content`)
+      console.log(`Learning API: http://localhost:${PORT}/api/learning`)
       console.log('═══════════════════════════════════════════════════════')
       console.log('Default credentials:')
       console.log('  Admin: admin@diglearners.rw / admin123')
@@ -128,7 +128,7 @@ const startServer = async () => {
       console.log('═══════════════════════════════════════════════════════')
     })
   } catch (error) {
-    console.error('❌ Failed to start server:', error)
+    console.error('Failed to start server:', error)
     process.exit(1)
   }
 }

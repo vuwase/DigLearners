@@ -177,10 +177,10 @@ const seedInitialData = async () => {
 
     // Create sample learning class
     const sampleClass = await LearningClass.create({
-      name: 'Primary 3 Digital Literacy',
+      name: 'Digital Literacy Class',
       teacherId: teacherUser.id,
-      description: 'Introduction to digital literacy for primary 3 students',
-      grade: 'P3'
+      description: 'Introduction to digital literacy for students',
+      grade: null
     });
 
     // Create sample lessons
@@ -235,7 +235,7 @@ const seedInitialData = async () => {
         name: 'Typing Master',
         description: 'Achieved 40 WPM in a typing lesson!',
         criteria: 'Reach 40 WPM in typing',
-        icon: '⌨️',
+        icon: 'computer',
         points: 50,
         category: 'achievement',
         requirements: { lessonType: 'typing', minScore: 40 }
@@ -244,7 +244,7 @@ const seedInitialData = async () => {
         name: 'Safe Surfer',
         description: 'Successfully navigated 5 safe browsing scenarios!',
         criteria: 'Complete 5 safety lessons',
-        icon: '🛡️',
+        icon: 'shield',
         points: 40,
         category: 'achievement',
         requirements: { lessonType: 'safety', minLessons: 5 }
@@ -262,7 +262,7 @@ const seedInitialData = async () => {
         name: '7-Day Streak',
         description: 'Logged in for 7 consecutive days!',
         criteria: '7 consecutive days of activity',
-        icon: '🔥',
+        icon: 'lightning',
         points: 30,
         category: 'milestone',
         requirements: { streakDays: 7 }

@@ -10,16 +10,24 @@ const router = express.Router();
 // JWT Secret (should be in environment variables)
 const JWT_SECRET = process.env.JWT_SECRET || 'diglearners-secret-key-2024';
 
-// Register endpoint
+// Register endpoint 
 router.post('/register', async (req, res) => {
   try {
-    const { fullName, email, password, role = 'learner' } = req.body;
+    const { fullName, email, password, role = 'learner', childName, childEmail, childPassword } = req.body;
 
     // Validate input
     if (!fullName || !email || !password) {
       return res.status(400).json({
         success: false,
         error: 'Full name, email, and password are required'
+      });
+    }
+
+    // Prevent teacher registration through public endpoint
+    if (role === 'teacher') {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Teacher accounts can only be created by administrators' 
       });
     }
 
@@ -32,7 +40,7 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Create new user
+    // Create new user (parent or regular user)
     const user = await User.create({
       fullName,
       email,
@@ -40,22 +48,36 @@ router.post('/register', async (req, res) => {
       role
     });
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { 
-        userId: user.id, 
-        email: user.email, 
-        role: user.role 
-      },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // If parent is enrolling a child, create child account
+    let childUser = null;
+    if (role === 'parent' && childName && childEmail && childPassword) {
+      // Check if child email already exists
+      const existingChild = await User.findByEmail(childEmail);
+      if (existingChild) {
+        // Delete the parent account we just created since enrollment failed
+        await user.destroy();
+        return res.status(400).json({
+          success: false,
+          error: 'A user with this child email already exists'
+        });
+      }
+
+      // Create child account
+      childUser = await User.create({
+        fullName: childName,
+        email: childEmail,
+        passwordHash: childPassword, // Will be hashed by model hook
+        role: 'learner'
+      });
+    }
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: childUser 
+        ? 'Parent and child accounts created successfully! Please login to continue.'
+        : 'User registered successfully! Please login to continue.',
       user: user.toJSON(),
-      token
+      childUser: childUser ? childUser.toJSON() : null
     });
 
   } catch (error) {
@@ -278,6 +300,58 @@ router.get('/verify', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Internal server error verifying token'
+    });
+  }
+});
+
+// Admin-only endpoint to create teacher accounts
+router.post('/admin/create-teacher', authenticateToken, async (req, res) => {
+  try {
+    // Check if the requesting user is an admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Only administrators can create teacher accounts'
+      });
+    }
+
+    const { fullName, email, password } = req.body;
+
+    // Validate input
+    if (!fullName || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Full name, email, and password are required'
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        error: 'User with this email already exists'
+      });
+    }
+
+    // Create teacher account
+    const teacher = await User.create({
+      fullName,
+      email,
+      passwordHash: password, // Will be hashed by model hook
+      role: 'teacher'
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Teacher account created successfully',
+      user: teacher.toJSON()
+    });
+  } catch (error) {
+    console.error('Teacher creation error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error during teacher creation' 
     });
   }
 });
