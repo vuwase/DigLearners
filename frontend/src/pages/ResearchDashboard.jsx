@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useTranslation } from '../lib/language'
 import { analyticsManager } from '../lib/analytics'
 import MyComponent from '../components/MyComponent'
+import Icon from '../components/icons/Icon'
 
 export default function ResearchDashboard() {
   const { t } = useTranslation()
@@ -66,13 +67,13 @@ export default function ResearchDashboard() {
   }
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: '📊' },
-    { id: 'engagement', label: 'Engagement', icon: '🎯' },
-    { id: 'learning', label: 'Learning', icon: '📚' },
-    { id: 'accessibility', label: 'Accessibility', icon: '♿' },
-    { id: 'language', label: 'Language', icon: '🌐' },
-    { id: 'connectivity', label: 'Connectivity', icon: '📡' },
-    { id: 'recommendations', label: 'Recommendations', icon: '💡' }
+    { id: 'overview', label: 'Overview', icon: 'analytics' },
+    { id: 'engagement', label: 'Engagement', icon: 'target' },
+    { id: 'learning', label: 'Learning', icon: 'book' },
+    { id: 'accessibility', label: 'Accessibility', icon: 'accessibility' },
+    { id: 'language', label: 'Language', icon: 'globe' },
+    { id: 'connectivity', label: 'Connectivity', icon: 'phone' },
+    { id: 'recommendations', label: 'Recommendations', icon: 'help' }
   ]
 
   return (
@@ -99,10 +100,12 @@ export default function ResearchDashboard() {
         </div>
         <div className="export-buttons">
           <button onClick={() => exportData('json')} className="export-button">
-            📄 Export JSON
+            <Icon name="report" size={16} style={{ marginRight: '8px' }} />
+            Export JSON
           </button>
           <button onClick={() => exportData('csv')} className="export-button">
-            📊 Export CSV
+            <Icon name="analytics" size={16} style={{ marginRight: '8px' }} />
+            Export CSV
           </button>
         </div>
       </div>
@@ -115,7 +118,9 @@ export default function ResearchDashboard() {
             className={`research-tab ${selectedTab === tab.id ? 'active' : ''}`}
             onClick={() => setSelectedTab(tab.id)}
           >
-            <span className="tab-icon">{tab.icon}</span>
+            <span className="tab-icon">
+              <Icon name={tab.icon} size={20} />
+            </span>
             <span className="tab-label">{tab.label}</span>
           </button>
         ))}
@@ -125,7 +130,10 @@ export default function ResearchDashboard() {
       <div className="research-content">
         {selectedTab === 'overview' && (
           <div className="overview-section">
-            <h3>📊 Overview</h3>
+            <h3>
+              <Icon name="analytics" size={20} style={{ marginRight: '8px' }} />
+              Overview
+            </h3>
             <div className="metrics-grid">
               <div className="metric-card">
                 <div className="metric-value">{report.summary.totalSessions}</div>
@@ -153,7 +161,10 @@ export default function ResearchDashboard() {
 
         {selectedTab === 'engagement' && (
           <div className="engagement-section">
-            <h3>🎯 Engagement Analysis</h3>
+            <h3>
+              <Icon name="target" size={20} style={{ marginRight: '8px' }} />
+              Engagement Analysis
+            </h3>
             <div className="engagement-metrics">
               <div className="metric-card">
                 <div className="metric-value">{report.engagement.totalEngagementEvents}</div>
@@ -185,7 +196,10 @@ export default function ResearchDashboard() {
 
         {selectedTab === 'learning' && (
           <div className="learning-section">
-            <h3>📚 Learning Analysis</h3>
+            <h3>
+              <Icon name="book" size={20} style={{ marginRight: '8px' }} />
+              Learning Analysis
+            </h3>
             <div className="learning-metrics">
               <div className="metric-card">
                 <div className="metric-value">{report.learning.totalLearningEvents}</div>
@@ -213,7 +227,10 @@ export default function ResearchDashboard() {
 
         {selectedTab === 'accessibility' && (
           <div className="accessibility-section">
-            <h3>♿ Accessibility Analysis</h3>
+            <h3>
+              <Icon name="accessibility" size={20} style={{ marginRight: '8px' }} />
+              Accessibility Analysis
+            </h3>
             <div className="accessibility-metrics">
               <div className="metric-card">
                 <div className="metric-value">{report.accessibility.totalAccessibilityEvents}</div>
@@ -241,7 +258,10 @@ export default function ResearchDashboard() {
 
         {selectedTab === 'language' && (
           <div className="language-section">
-            <h3>🌐 Language Usage Analysis</h3>
+            <h3>
+              <Icon name="globe" size={20} style={{ marginRight: '8px' }} />
+              Language Usage Analysis
+            </h3>
             <div className="language-metrics">
               <div className="metric-card">
                 <div className="metric-value">{report.language.totalLanguageEvents}</div>
@@ -273,7 +293,10 @@ export default function ResearchDashboard() {
 
         {selectedTab === 'connectivity' && (
           <div className="connectivity-section">
-            <h3>📡 Connectivity Analysis</h3>
+            <h3>
+              <Icon name="phone" size={20} style={{ marginRight: '8px' }} />
+              Connectivity Analysis
+            </h3>
             <div className="connectivity-metrics">
               <div className="metric-card">
                 <div className="metric-value">{report.connectivity.totalConnectivityEvents}</div>
@@ -297,7 +320,10 @@ export default function ResearchDashboard() {
 
         {selectedTab === 'recommendations' && (
           <div className="recommendations-section">
-            <h3>💡 Recommendations</h3>
+            <h3>
+              <Icon name="help" size={20} style={{ marginRight: '8px' }} />
+              Recommendations
+            </h3>
             <div className="recommendations-list">
               {report.recommendations.map((rec, index) => (
                 <div key={index} className={`recommendation-card ${rec.priority}`}>

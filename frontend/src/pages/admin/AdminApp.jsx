@@ -4,6 +4,11 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import AppLayout from '../../components/layout/AppLayout'
 import AdminDashboard from './AdminDashboard'
+import UserManagement from './UserManagement'
+import ContentManagement from './ContentManagement'
+import Analytics from './Analytics'
+import Settings from './Settings'
+import Reports from './Reports'
 
 const AdminApp = () => {
   const { user, logout } = useAuth()
@@ -16,11 +21,11 @@ const AdminApp = () => {
     <AppLayout user={user} onLogout={logout}>
       <Routes>
         <Route path="/" element={<AdminDashboard />} />
-        <Route path="/users" element={<div className="page-content"><h1>User Management Page</h1></div>} />
-        <Route path="/content" element={<div className="page-content"><h1>Content Management Page</h1></div>} />
-        <Route path="/analytics" element={<div className="page-content"><h1>Analytics Page</h1></div>} />
-        <Route path="/settings" element={<div className="page-content"><h1>Settings Page</h1></div>} />
-        <Route path="/reports" element={<div className="page-content"><h1>Reports Page</h1></div>} />
+        <Route path="/users" element={<UserManagement />} />
+        <Route path="/content" element={<ContentManagement />} />
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/reports" element={<Reports />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </AppLayout>

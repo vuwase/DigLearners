@@ -2,6 +2,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from '../../contexts/LanguageContext'
+import Icon from '../../components/icons/Icon'
 
 const NotFound = () => {
   const { t } = useLanguage()
@@ -24,11 +25,21 @@ const NotFound = () => {
         </div>
         <div className="not-found-illustration">
           <div className="floating-elements">
-            <div className="element element-1">📚</div>
-            <div className="element element-2">💻</div>
-            <div className="element element-3">🎓</div>
-            <div className="element element-4">⭐</div>
-            <div className="element element-5">🔍</div>
+            <div className="element element-1">
+              <Icon name="book" size={24} />
+            </div>
+            <div className="element element-2">
+              <Icon name="computer" size={24} />
+            </div>
+            <div className="element element-3">
+              <Icon name="student" size={24} />
+            </div>
+            <div className="element element-4">
+              <Icon name="star" size={24} />
+            </div>
+            <div className="element element-5">
+              <Icon name="search" size={24} />
+            </div>
           </div>
         </div>
       </div>

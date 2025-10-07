@@ -6,7 +6,8 @@ const Login = ({ onLogin }) => {
   const { t } = useLanguage()
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    rememberMe: true // Default to true for kids
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -78,6 +79,20 @@ const Login = ({ onLogin }) => {
             />
           </div>
           
+          <div className="form-group remember-me">
+            <label className="remember-me-label">
+              <input
+                type="checkbox"
+                name="rememberMe"
+                checked={formData.rememberMe}
+                onChange={handleChange}
+                className="remember-me-checkbox"
+              />
+              <span className="checkmark"></span>
+              <span className="remember-me-text">🔒 Keep me logged in (recommended for kids)</span>
+            </label>
+          </div>
+          
           <button 
             type="submit" 
             className="login-button"
@@ -88,7 +103,7 @@ const Login = ({ onLogin }) => {
         </form>
         
         <div className="login-footer">
-          <p>Don't have an account? <a href="/register">Register here</a></p>
+          <p>Haven't you enrolled your child yet? <a href="/enroll">Enroll your child here</a></p>
         </div>
       </div>
       
@@ -96,11 +111,12 @@ const Login = ({ onLogin }) => {
         __html: `
           .login-page {
             min-height: 100vh;
-            background: linear-gradient(135deg, #0ea5a4, #06b6d4);
+            background: linear-gradient(135deg, #FFB3BA, #B9FBC0);
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 2rem;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
           }
           
           .login-container {
@@ -118,7 +134,7 @@ const Login = ({ onLogin }) => {
           }
           
           .login-header h1 {
-            color: #0ea5a4;
+            color: #FF677D;
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
           }
@@ -156,7 +172,7 @@ const Login = ({ onLogin }) => {
           
           .form-group input:focus {
             outline: none;
-            border-color: #0ea5a4;
+            border-color: #FF677D;
           }
           
           .error-message {
@@ -170,7 +186,7 @@ const Login = ({ onLogin }) => {
           
           .login-button {
             width: 100%;
-            background: #0ea5a4;
+            background: linear-gradient(135deg, #FF677D, #F8B400);
             color: white;
             border: none;
             padding: 0.75rem;
@@ -178,11 +194,12 @@ const Login = ({ onLogin }) => {
             font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
           }
           
           .login-button:hover:not(:disabled) {
-            background: #0d9488;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 103, 125, 0.3);
           }
           
           .login-button:disabled {
@@ -190,14 +207,64 @@ const Login = ({ onLogin }) => {
             cursor: not-allowed;
           }
           
+          .remember-me {
+            margin-bottom: 1rem;
+          }
+          
+          .remember-me-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #4A5568;
+          }
+          
+          .remember-me-checkbox {
+            display: none;
+          }
+          
+          .checkmark {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #FF677D;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            background: white;
+          }
+          
+          .remember-me-checkbox:checked + .checkmark {
+            background: #FF677D;
+            color: white;
+          }
+          
+          .remember-me-checkbox:checked + .checkmark::after {
+            content: '✓';
+            font-weight: bold;
+            font-size: 14px;
+          }
+          
+          .remember-me-text {
+            font-weight: 500;
+          }
+          
           .login-footer {
             text-align: center;
             margin-top: 1.5rem;
           }
           
+          .login-footer p {
+            color: #000000;
+            margin: 0;
+          }
+          
           .login-footer a {
-            color: #0ea5a4;
+            color: #FF677D;
             text-decoration: none;
+            font-weight: 600;
           }
           
           .login-footer a:hover {

@@ -1,5 +1,6 @@
 // Multilingual support for DigLearners
 // Supports Kinyarwanda and English
+import React from 'react'
 
 export const LANGUAGES = {
   EN: 'en',
@@ -291,6 +292,6 @@ export function useTranslation() {
 export function withTranslation(WrappedComponent) {
   return function TranslatedComponent(props) {
     const { t, setLanguage, currentLanguage } = useTranslation()
-    return <WrappedComponent {...props} t={t} setLanguage={setLanguage} currentLanguage={currentLanguage} />
+    return React.createElement(WrappedComponent, { ...props, t, setLanguage, currentLanguage })
   }
 }

@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from '../lib/language'
+import ProgressTracker from './ProgressTracker'
+import Icon from './icons/Icon'
+import './CodePlayStyles.css'
 
 export default function TypingLesson({ lesson, onComplete, onProgress }) {
   const { t } = useTranslation()
@@ -111,23 +114,49 @@ export default function TypingLesson({ lesson, onComplete, onProgress }) {
 
   return (
     <div className="typing-lesson">
-      <div className="lesson-header">
-        <h2>{lesson?.title || t('lesson.typing_basics')}</h2>
-        <div className="lesson-stats">
-          <div className="stat">
-            <span className="stat-label">WPM:</span>
-            <span className="stat-value">{wpm}</span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">Accuracy:</span>
-            <span className="stat-value">{Math.round(accuracy)}%</span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">Errors:</span>
-            <span className="stat-value">{errors}</span>
+      {/* CodePlay-style header */}
+      <div className="lesson-header codeplay-header">
+        <div className="header-left">
+          <h1 className="codeplay-title">CodePlay</h1>
+        </div>
+        <div className="header-right">
+          <div className="user-profile">
+            <div className="avatar">
+              <Icon name="computer" size={24} />
+            </div>
+            <span className="user-name">Hi, Alex</span>
           </div>
         </div>
       </div>
+
+      {/* Main lesson area */}
+      <div className="lesson-content">
+        <div className="lesson-info">
+          <h2>{lesson?.title || t('lesson.typing_basics')}</h2>
+          
+          {/* Enhanced progress tracking */}
+          <ProgressTracker 
+            currentProgress={Math.round((userInput.length / currentText.length) * 100)}
+            totalItems={100}
+            showStats={true}
+            showLevel={true}
+          />
+          
+          <div className="lesson-stats">
+            <div className="stat">
+              <span className="stat-label">WPM:</span>
+              <span className="stat-value">{wpm}</span>
+            </div>
+            <div className="stat">
+              <span className="stat-label">Accuracy:</span>
+              <span className="stat-value">{Math.round(accuracy)}%</span>
+            </div>
+            <div className="stat">
+              <span className="stat-label">Errors:</span>
+              <span className="stat-value">{errors}</span>
+            </div>
+          </div>
+        </div>
 
       <div className="typing-area">
         <div className="text-display">
@@ -160,12 +189,16 @@ export default function TypingLesson({ lesson, onComplete, onProgress }) {
 
       <div className="lesson-controls">
         <button onClick={resetLesson} className="reset-button">
-          🔄 {t('common.restart')}
+          <Icon name="recent" size={16} style={{ marginRight: '8px' }} />
+          {t('common.restart')}
         </button>
         
         {isCompleted && (
           <div className="completion-message">
-            <h3>🎉 {t('lesson.lesson_complete')}</h3>
+            <h3>
+              <Icon name="star" size={20} style={{ marginRight: '8px' }} />
+              {t('lesson.lesson_complete')}
+            </h3>
             <p>Great job! You typed at {wpm} WPM with {Math.round(accuracy)}% accuracy!</p>
             <button onClick={() => onComplete && onComplete({ wpm, accuracy, errors })} className="next-button">
               {t('common.next')} →
@@ -175,7 +208,10 @@ export default function TypingLesson({ lesson, onComplete, onProgress }) {
       </div>
 
       <div className="typing-tips">
-        <h4>💡 Typing Tips:</h4>
+        <h4>
+          <Icon name="help" size={16} style={{ marginRight: '8px' }} />
+          Typing Tips:
+        </h4>
         <ul>
           <li>Keep your fingers on the home row</li>
           <li>Look at the screen, not the keyboard</li>

@@ -6,6 +6,7 @@ import MyComponent from '../components/MyComponent'
 import TypingLesson from '../components/TypingLesson'
 import SafeBrowsingLesson from '../components/SafeBrowsingLesson'
 import BlockCodingLesson from '../components/BlockCodingLesson'
+import Icon from '../components/icons/Icon'
 import { fetchLessonById, saveProgress } from '../lib/api'
 
 export default function LessonPlayer() {
@@ -148,7 +149,10 @@ export default function LessonPlayer() {
     <MyComponent title={lesson.title} subtitle={`${lesson.moduleType} • ${Math.round(progress)}% complete`}>
       {isCompleted && (
         <div className="completion-banner">
-          <h3>🎉 {t('lesson.congratulations')}</h3>
+          <h3>
+            <Icon name="star" size={20} style={{ marginRight: '8px' }} />
+            {t('lesson.congratulations')}
+          </h3>
           <p>You've completed this lesson! Great job!</p>
           <div className="completion-actions">
             <button onClick={handleBackToLessons} className="back-button">

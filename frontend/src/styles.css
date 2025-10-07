@@ -128,7 +128,7 @@ body {
 }
 
 .top-nav .brand::before {
-  content: '🎓';
+  content: '';
   font-size: var(--font-size-lg);
 }
 

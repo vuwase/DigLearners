@@ -1,6 +1,7 @@
 // Role Selector Component
 import React from 'react'
 import { useLanguage } from '../../contexts/LanguageContext'
+import Icon from '../icons/Icon'
 
 const RoleSelector = ({ onRoleSelect }) => {
   const { t } = useLanguage()
@@ -10,28 +11,28 @@ const RoleSelector = ({ onRoleSelect }) => {
       id: 'learner',
       title: t('role.learner'),
       description: t('role.roleDescription.learner'),
-      icon: '🎓',
+      icon: 'student',
       color: '#0ea5a4'
     },
     {
       id: 'teacher',
       title: t('role.teacher'),
       description: t('role.roleDescription.teacher'),
-      icon: '👨‍🏫',
+      icon: 'teacher',
       color: '#059669'
     },
     {
       id: 'parent',
       title: t('role.parent'),
       description: t('role.roleDescription.parent'),
-      icon: '👨‍👩‍👧‍👦',
+      icon: 'users',
       color: '#7c3aed'
     },
     {
       id: 'admin',
       title: t('role.admin'),
       description: t('role.roleDescription.admin'),
-      icon: '⚙️',
+      icon: 'settings',
       color: '#dc2626'
     }
   ]
@@ -103,8 +104,13 @@ const RoleSelector = ({ onRoleSelect }) => {
             >
               <div className="role-icon" style={{
                 fontSize: '3rem',
-                marginBottom: '1rem'
-              }}>{role.icon}</div>
+                marginBottom: '1rem',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+                <Icon name={role.icon} size={48} />
+              </div>
               <h3 style={{
                 color: role.color,
                 fontSize: '1.5rem',

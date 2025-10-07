@@ -10,7 +10,7 @@ export const BADGES = {
     id: 'first_lesson',
     name: 'First Steps',
     description: 'Completed your first lesson!',
-    icon: '🎯',
+    icon: 'target',
     points: 10,
     requirement: { type: 'lessons_completed', count: 1 }
   },
@@ -18,7 +18,7 @@ export const BADGES = {
     id: 'typing_master',
     name: 'Typing Master',
     description: 'Completed 5 typing lessons',
-    icon: '⌨️',
+    icon: 'computer',
     points: 50,
     requirement: { type: 'typing_lessons', count: 5 }
   },
@@ -26,7 +26,7 @@ export const BADGES = {
     id: 'safe_surfer',
     name: 'Safe Surfer',
     description: 'Learned about internet safety',
-    icon: '🛡️',
+    icon: 'shield',
     points: 30,
     requirement: { type: 'safety_lessons', count: 3 }
   },
@@ -34,7 +34,7 @@ export const BADGES = {
     id: 'code_breaker',
     name: 'Code Breaker',
     description: 'Solved 10 coding puzzles',
-    icon: '🧩',
+    icon: 'puzzle',
     points: 100,
     requirement: { type: 'coding_puzzles', count: 10 }
   },
@@ -42,7 +42,7 @@ export const BADGES = {
     id: 'weekly_champion',
     name: 'Weekly Champion',
     description: 'Top performer this week',
-    icon: '🏆',
+    icon: 'achievement',
     points: 200,
     requirement: { type: 'weekly_leaderboard', position: 1 }
   },
@@ -50,7 +50,7 @@ export const BADGES = {
     id: 'perfect_score',
     name: 'Perfect Score',
     description: 'Got 100% on a lesson',
-    icon: '⭐',
+    icon: 'star',
     points: 25,
     requirement: { type: 'perfect_score', count: 1 }
   }

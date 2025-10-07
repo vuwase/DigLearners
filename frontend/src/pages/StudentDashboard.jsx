@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { gamificationManager, LEVELS } from '../lib/gamification'
 import { useTranslation } from '../lib/language'
 import MyComponent from '../components/MyComponent'
+import Icon from '../components/icons/Icon'
 
 export default function StudentDashboard() {
   const { t } = useTranslation()
@@ -70,7 +71,10 @@ export default function StudentDashboard() {
       {/* New Badges Notification */}
       {newBadges.length > 0 && (
         <div className="badge-notification">
-          <h3>🎉 {t('student.new_badges')}</h3>
+          <h3>
+            <Icon name="star" size={20} style={{ marginRight: '8px' }} />
+            {t('student.new_badges')}
+          </h3>
           {newBadges.map(badge => (
             <div key={badge.id} className="new-badge">
               <span className="badge-icon">{badge.icon}</span>
@@ -113,7 +117,9 @@ export default function StudentDashboard() {
       {/* Stats Grid */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon">📚</div>
+          <div className="stat-icon">
+            <Icon name="book" size={24} />
+          </div>
           <div className="stat-content">
             <div className="stat-number">{progress.lessonsCompleted}</div>
             <div className="stat-label">Lessons Completed</div>
@@ -121,7 +127,9 @@ export default function StudentDashboard() {
         </div>
         
         <div className="stat-card">
-          <div className="stat-icon">🏆</div>
+          <div className="stat-icon">
+            <Icon name="achievement" size={24} />
+          </div>
           <div className="stat-content">
             <div className="stat-number">{progress.badges.length}</div>
             <div className="stat-label">Badges Earned</div>
@@ -129,7 +137,9 @@ export default function StudentDashboard() {
         </div>
         
         <div className="stat-card">
-          <div className="stat-icon">⭐</div>
+          <div className="stat-icon">
+            <Icon name="star" size={24} />
+          </div>
           <div className="stat-content">
             <div className="stat-number">{progress.totalPoints}</div>
             <div className="stat-label">Total Points</div>
@@ -137,7 +147,9 @@ export default function StudentDashboard() {
         </div>
         
         <div className="stat-card">
-          <div className="stat-icon">🔥</div>
+          <div className="stat-icon">
+            <Icon name="lightning" size={24} />
+          </div>
           <div className="stat-content">
             <div className="stat-number">{progress.streak}</div>
             <div className="stat-label">Day Streak</div>

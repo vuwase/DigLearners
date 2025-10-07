@@ -4,6 +4,11 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import AppLayout from '../../components/layout/AppLayout'
 import LearnerDashboard from './LearnerDashboard'
+import MyLessons from './MyLessons'
+import Assignments from './Assignments'
+import Leaderboard from './Leaderboard'
+import Achievements from './Achievements'
+import Progress from './Progress'
 
 const LearnerApp = () => {
   const { user, logout } = useAuth()
@@ -16,12 +21,11 @@ const LearnerApp = () => {
     <AppLayout user={user} onLogout={logout}>
       <Routes>
         <Route path="/" element={<LearnerDashboard />} />
-        <Route path="/lessons" element={<div className="page-content"><h1>Lessons Page</h1></div>} />
-        <Route path="/progress" element={<div className="page-content"><h1>Progress Page</h1></div>} />
-        <Route path="/badges" element={<div className="page-content"><h1>Badges Page</h1></div>} />
-        <Route path="/assignments" element={<div className="page-content"><h1>Assignments Page</h1></div>} />
-        <Route path="/leaderboard" element={<div className="page-content"><h1>Leaderboard Page</h1></div>} />
-        <Route path="/achievements" element={<div className="page-content"><h1>Achievements Page</h1></div>} />
+        <Route path="/lessons" element={<MyLessons />} />
+        <Route path="/progress" element={<Progress />} />
+        <Route path="/assignments" element={<Assignments />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/achievements" element={<Achievements />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </AppLayout>
