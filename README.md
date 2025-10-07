@@ -330,4 +330,6 @@ For support and questions:
 
 **DigLearners Platform** - Empowering digital literacy in Rwandan primary schools through innovative technology and research-driven design.
 
-Link to the video : 
+Link to Github Repository : <https://github.com/vuwase/DigLearners>
+
+Link to the video : <https://vimeo.com/1125321274/25fca3c4a9?share=copy>
