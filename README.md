@@ -18,7 +18,7 @@ DigLearners is a web-based platform that enhances foundational digital literacy 
 The platform follows a three-tier architecture as defined in the UML diagrams:
 
 ### Backend (Node.js + Express + SQLite)
-```
+
 backend/
 ├── api/                 # API routes
 │   ├── auth.js         # Authentication endpoints
@@ -34,10 +34,9 @@ backend/
 ├── middleware/          # Authentication & authorization
 ├── services/           # Business logic
 └── utils/             # Utility functions
-```
 
 ### Frontend (React + PWA)
-```
+
 frontend/
 ├── src/
 │   ├── components/     # Reusable components
@@ -53,17 +52,18 @@ frontend/
 │   ├── services/       # API services
 │   ├── hooks/          # Custom hooks
 │   └── utils/          # Utility functions
-```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js >= 16.0.0
 - npm >= 8.0.0
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/diglearners/diglearners-platform.git
    cd diglearners
@@ -80,8 +80,9 @@ frontend/
    ```
 
 This will start:
-- Backend API server on http://localhost:3001
-- Frontend development server on http://localhost:3000
+
+- Backend API server on [http://localhost:3001](http://localhost:3001)
+- Frontend development server on [http://localhost:3000](http://localhost:3000)
 
 ### Default Login Credentials
 
@@ -106,6 +107,7 @@ npm start
 The platform implements the Entity-Relationship Diagram (ERD) with the following entities:
 
 ### Core Entities
+
 - **User**: Users with roles (Admin, Teacher, Learner, Parent)
 - **LearningClass**: Classes managed by teachers
 - **Lesson**: Educational content modules
@@ -114,6 +116,7 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 - **UserBadge**: User-badge relationships
 
 ### Relationships
+
 - User ↔ LearningClass (Teacher-Class)
 - User ↔ Progress (User-Progress)
 - Lesson ↔ Progress (Lesson-Progress)
@@ -123,6 +126,7 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 ## 🎮 Gamification System
 
 ### Levels
+
 1. **Explorer** (0-99 points)
 2. **Adventurer** (100-299 points)
 3. **Pathfinder** (300-599 points)
@@ -131,6 +135,7 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 6. **Digital Guru** (1500+ points)
 
 ### Badge Categories
+
 - **Achievement**: Lesson completion badges
 - **Milestone**: Progress milestone badges
 - **Special**: Unique accomplishment badges
@@ -138,6 +143,7 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 - **Monthly**: Monthly achievement badges
 
 ### Points System
+
 - Lesson completion: 10-50 points
 - Perfect scores: +25 bonus points
 - Daily streaks: +5 points per day
@@ -146,10 +152,12 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 ## 🌐 Multilingual Support
 
 ### Supported Languages
-- **English** (en): Primary language
-- **Kinyarwanda** (rw): Local language support
+
+- English (en): Primary language
+- Kinyarwanda (rw): Local language support
 
 ### Translation Coverage
+
 - Navigation and UI elements
 - Lesson content and instructions
 - Error messages and notifications
@@ -159,12 +167,14 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 ## 🔐 Role-Based Access Control
 
 ### Learner Interface
+
 - Access to lessons and learning activities
 - Progress tracking and gamification
 - Badge collection and achievements
 - Offline learning capabilities
 
 ### Teacher Interface
+
 - Class management and student oversight
 - Lesson assignment and progress monitoring
 - Analytics and reporting tools
@@ -172,6 +182,7 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 - Enroll child
 
 ### Parent Interface
+
 - Child progress monitoring
 - Achievement tracking
 - Time spent analytics
@@ -179,6 +190,7 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 - Enroll child
 
 ### Admin Interface
+
 - User management
 - Content management
 - Platform analytics
@@ -188,6 +200,7 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 ## 📱 PWA Features
 
 ### Offline-First Architecture
+
 - Service Worker for caching
 - IndexedDB for local storage
 - Background sync for data synchronization
@@ -195,6 +208,7 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 - Progress tracking offline
 
 ### Mobile Optimization
+
 - Responsive design for all devices
 - Touch-friendly interface
 - Large buttons and text
@@ -204,6 +218,7 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 ## 🔬 Research Analytics
 
 ### Data Collection
+
 - User engagement metrics
 - Learning progress tracking
 - Accessibility feature usage
@@ -211,6 +226,7 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 - Offline/online usage patterns
 
 ### Export Capabilities
+
 - JSON data export
 - CSV report generation
 - Real-time analytics dashboard
@@ -219,6 +235,7 @@ The platform implements the Entity-Relationship Diagram (ERD) with the following
 ## 🛠️ Development
 
 ### Backend Development
+
 ```bash
 cd backend
 npm run dev          # Start development server
@@ -227,6 +244,7 @@ npm run lint        # Lint code
 ```
 
 ### Frontend Development
+
 ```bash
 cd frontend
 npm run dev         # Start development server
@@ -236,6 +254,7 @@ npm run lint       # Lint code
 ```
 
 ### Database Management
+
 ```bash
 cd backend
 npm run seed       # Seed initial data
@@ -246,9 +265,24 @@ npm run seed       # Seed initial data
 - vercel for frontend
 - Render for backend
 
+## Design
+
+### Figma link
+
+[DigLearners Design](https://www.figma.com/proto/DHJzfnTGOLElAUjIZy1F6L/DigLearners?node-id=1-2&p=f&t=OCnB4nXJfAU5fSMs-1&scaling=scale-down&content-scaling=fixed&page-id=0%3A1)
+
+### App Screenshots
+
+ -![alt text](screenshots/Dashboard.png)
+ -![alt text](<screenshots/enrollnment page.png>)
+ -![alt text](screenshots/Homepage.png)
+ -![alt text](<screenshots/Login page.png>)
+ -![alt text](<screenshots/Mobile-responsive view.png>)
+
 ## 📚 API Documentation
 
 ### Authentication Endpoints
+
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `POST /api/auth/logout` - User logout
@@ -256,12 +290,14 @@ npm run seed       # Seed initial data
 - `PUT /api/auth/profile` - Update profile
 
 ### Content Management
+
 - `GET /api/content/lessons` - Get all lessons
 - `GET /api/content/lessons/:id` - Get lesson by ID
 - `POST /api/content/lessons` - Create lesson (Admin)
 - `PUT /api/content/lessons/:id` - Update lesson (Admin)
 
 ### Learning Activities
+
 - `GET /api/learning/lessons` - Get available lessons
 - `POST /api/learning/lessons/:id/progress` - Record progress
 - `GET /api/learning/progress` - Get user progress
@@ -270,18 +306,21 @@ npm run seed       # Seed initial data
 ## 🧪 Testing
 
 ### Backend Tests
+
 ```bash
 cd backend
 npm test
 ```
 
 ### Frontend Tests
+
 ```bash
 cd frontend
 npm test
 ```
 
 ### E2E Tests
+
 ```bash
 npm run test:e2e
 ```
@@ -289,12 +328,14 @@ npm run test:e2e
 ## 🚀 Deployment
 
 ### Docker Deployment
+
 ```bash
 npm run docker:build
 npm run docker:up
 ```
 
 ### Manual Deployment
+
 1. Build the application: `npm run build`
 2. Deploy backend to your server
 3. Deploy frontend to your web server
@@ -316,7 +357,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For support and questions:
-- Email: support@diglearners.rw
+
+- Email: [support@diglearners.rw](mailto:support@diglearners.rw)
 - GitHub Issues: [Create an issue](https://github.com/diglearners/diglearners-platform/issues)
 
 ## 🙏 Acknowledgments
@@ -326,10 +368,12 @@ For support and questions:
 - Digital literacy research community
 - Open source contributors
 
----
+DigLearners Platform - Empowering digital literacy in Rwandan primary schools through innovative technology and research-driven design.
 
-**DigLearners Platform** - Empowering digital literacy in Rwandan primary schools through innovative technology and research-driven design.
+### Link to Github Repository
 
-Link to Github Repository : <https://github.com/vuwase/DigLearners>
+ <https://github.com/vuwase/DigLearners>
 
-Link to the video : <https://vimeo.com/1125321274/25fca3c4a9?share=copy>
+### Link to the video
+
+<https://vimeo.com/1125321274/25fca3c4a9?share=copy>
