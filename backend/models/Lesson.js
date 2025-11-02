@@ -44,6 +44,60 @@ module.exports = (sequelize) => {
       allowNull: true,
       field: 'age_group'
     },
+    subject: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    grade: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    teacherId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'teacher_id',
+      references: {
+        model: 'users',
+        key: 'id'
+      }
+    },
+    status: {
+      type: DataTypes.ENUM('draft', 'published', 'archived'),
+      allowNull: false,
+      defaultValue: 'draft'
+    },
+    objectives: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    resources: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    assignmentType: {
+      type: DataTypes.ENUM('lesson', 'puzzle', 'quiz', 'project'),
+      allowNull: true,
+      field: 'assignment_type',
+      defaultValue: 'lesson'
+    },
+    puzzleType: {
+      type: DataTypes.ENUM('drag-drop', 'matching', 'sequencing', 'fill-blank', 'multiple-choice'),
+      allowNull: true,
+      field: 'puzzle_type'
+    },
+    questions: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    instructions: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    dueDate: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'due_date'
+    },
     isActive: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

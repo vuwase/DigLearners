@@ -133,18 +133,35 @@ router.post('/lessons/:id/progress', authenticateToken, requireLearner, async (r
       for (const badge of eligibleBadges) {
         try {
           const userBadge = await badge.awardBadge(req.user.userId);
-          newBadges.push(userBadge);
+          // Include full badge details
+          const badgeData = await Badge.findByPk(badge.id);
+          newBadges.push({
+            id: userBadge.id,
+            badgeId: badge.id,
+            name: badgeData.name,
+            description: badgeData.description,
+            icon: badgeData.icon,
+            points: badgeData.points,
+            category: badgeData.category,
+            awardedAt: userBadge.awardedAt
+          });
         } catch (error) {
           console.log(`Badge ${badge.name} already awarded or error:`, error.message);
         }
       }
 
-      return res.json({
-        success: true,
-        message: 'Progress recorded successfully',
-        progress: progress.getPerformanceMetrics(),
-        newBadges: newBadges.map(badge => badge.displayBadge())
-      });
+      if (newBadges.length > 0) {
+        return res.json({
+          success: true,
+          message: 'Progress recorded successfully. Badges awarded!',
+          progress: progress.getPerformanceMetrics(),
+          newBadges: newBadges,
+          data: {
+            progress: progress.getPerformanceMetrics(),
+            newBadges: newBadges
+          }
+        });
+      }
     }
 
     res.json({
@@ -210,6 +227,100 @@ router.get('/badges', authenticateToken, requireLearner, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Internal server error fetching badges'
+    });
+  }
+});
+
+// Get user's achievements (alias for badges endpoint for frontend compatibility)
+router.get('/achievements', authenticateToken, requireLearner, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Get all badges
+    const allBadges = await Badge.findAll({
+      order: [['points', 'DESC']]
+    });
+
+    // Get user's earned badges - filter out any with null badges (orphaned records)
+    const earnedBadges = await UserBadge.findAll({
+      where: { userId },
+      include: [
+        {
+          model: Badge,
+          as: 'badge',
+          attributes: ['id', 'name', 'description', 'icon', 'points', 'category', 'criteria'],
+          required: false // Use LEFT JOIN to include UserBadges even if badge is missing
+        }
+      ],
+      order: [['awardedAt', 'DESC']]
+    });
+
+    // Filter out UserBadges where badge is null (orphaned records)
+    const validEarnedBadges = earnedBadges.filter(eb => eb.badge && eb.badge.id);
+
+    // Create earned badges map - only include badges that exist
+    const earnedBadgeIds = new Set(validEarnedBadges.map(eb => eb.badge.id));
+
+    // Create a map of earned badges with their awardedAt dates
+    const earnedBadgeDates = new Map();
+    validEarnedBadges.forEach(eb => {
+      if (eb.badge && eb.badge.id) {
+        earnedBadgeDates.set(eb.badge.id, eb.awardedAt);
+      }
+    });
+
+    // Map all badges with earned status
+    const badges = allBadges.map(badge => ({
+      id: badge.id,
+      name: badge.name,
+      title: badge.name, // Alias for compatibility
+      description: badge.description,
+      icon: badge.icon,
+      points: badge.points,
+      category: badge.category,
+      criteria: badge.criteria,
+      isEarned: earnedBadgeIds.has(badge.id),
+      earnedAt: earnedBadgeDates.get(badge.id) || null
+    }));
+
+    // Separate earned and all badges
+    const earned = badges.filter(b => b.isEarned);
+    const allBadgesWithStatus = badges;
+
+    res.json({
+      success: true,
+      data: {
+        badges: allBadgesWithStatus,
+        achievements: earned.map(badge => ({
+          id: badge.id,
+          name: badge.name,
+          title: badge.name,
+          description: badge.description,
+          icon: badge.icon,
+          points: badge.points,
+          category: badge.category,
+          earnedAt: badge.earnedAt
+        }))
+      },
+      // Also include at root level for backward compatibility
+      badges: allBadgesWithStatus,
+      achievements: earned.map(badge => ({
+        id: badge.id,
+        name: badge.name,
+        title: badge.name,
+        description: badge.description,
+        icon: badge.icon,
+        points: badge.points,
+        category: badge.category,
+        earnedAt: badge.earnedAt
+      }))
+    });
+
+  } catch (error) {
+    console.error('Error fetching achievements:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error fetching achievements'
     });
   }
 });
