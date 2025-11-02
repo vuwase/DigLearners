@@ -22,13 +22,6 @@ const RoleSelector = ({ onRoleSelect }) => {
       color: '#059669'
     },
     {
-      id: 'parent',
-      title: t('role.parent'),
-      description: t('role.roleDescription.parent'),
-      icon: 'users',
-      color: '#7c3aed'
-    },
-    {
       id: 'admin',
       title: t('role.admin'),
       description: t('role.roleDescription.admin'),

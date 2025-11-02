@@ -51,17 +51,71 @@ export const AuthProvider = ({ children, value: initialValue }) => {
   }, [initialValue?.user])
 
   const login = async (credentials) => {
+    console.log('[AuthContext] Login called with:', { 
+      email: credentials.email, 
+      loginType: credentials.loginType 
+    })
     setLoading(true)
     setError(null)
     try {
+      console.log('[AuthContext] Calling authService.login...')
       const result = await authService.login(credentials)
+      console.log('[AuthContext] Login result:', {
+        success: result?.success,
+        hasUser: !!result?.user,
+        hasToken: !!result?.token,
+        userEmail: result?.user?.email,
+        userRole: result?.user?.role
+      })
+      
+      if (!result) {
+        console.error('[AuthContext] ERROR: No result returned from authService.login!')
+        throw new Error('No response received from login service')
+      }
+      
+      if (!result.success) {
+        console.error('[AuthContext] Login failed - result.success is false:', result)
+        const errorMsg = result.error || 'Login failed'
+        setError({ message: errorMsg, type: 'login_failed' })
+        throw new Error(errorMsg)
+      }
+      
+      if (!result.user) {
+        console.error('[AuthContext] ERROR: Login succeeded but no user object!')
+        throw new Error('Login succeeded but user data is missing')
+      }
+      
+      if (!result.token) {
+        console.error('[AuthContext] ERROR: Login succeeded but no token!')
+        throw new Error('Login succeeded but authentication token is missing')
+      }
+      
+      console.log('[AuthContext] Setting user and token...')
       setUser(result.user)
       localStorage.setItem('authToken', result.token)
+      const userIdentifier = result.user.email || result.user.fullName || 'User'
+      console.log('[AuthContext] Login successful! User:', userIdentifier, 'Role:', result.user.role)
+      
       return result
     } catch (error) {
-      setError(error.message)
+      console.error('[AuthContext] Login error caught:', error)
+      console.error('[AuthContext] Error details:', {
+        message: error.message,
+        type: error.type,
+        status: error.status,
+        stack: error.stack
+      })
+      
+      // Enhanced error handling with specific error types
+      const errorDetails = {
+        message: error.message || 'Login failed',
+        type: error.type || 'unknown_error',
+        status: error.status
+      }
+      setError(errorDetails)
       throw error
     } finally {
+      console.log('[AuthContext] Login finally block - setting loading to false')
       setLoading(false)
     }
   }

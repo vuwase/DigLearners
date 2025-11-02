@@ -1,20 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../lib/language';
-import { getAssignmentsData } from '../../services/teacherMockDataService';
+import teacherApiService from '../../services/teacherApiService';
 import Icon from '../../components/icons/Icon';
+import PuzzleCreator from '../../components/puzzles/PuzzleCreator';
 import '../../components/DashboardStyles.css';
+import './PuzzleCreatorStyles.css';
+import './TeacherStyles.css';
 
 const Assignments = () => {
   const { t, currentLanguage } = useTranslation();
-  const data = getAssignmentsData();
-  const [selectedAssignment, setSelectedAssignment] = useState(data.assignments[0].id);
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    title: '',
+    subject: '',
+    grade: '',
+    content: '',
+    description: '',
+    difficulty: 'beginner',
+    estimatedDuration: '',
+    dueDate: '',
+    assignmentType: 'lesson',
+    puzzleType: '',
+    instructions: []
+  });
+  const [showPuzzleCreator, setShowPuzzleCreator] = useState(false);
+  const [puzzleData, setPuzzleData] = useState(null);
 
-  const currentAssignment = data.assignments.find(assign => assign.id === selectedAssignment);
+  useEffect(() => {
+    fetchAssignments();
+  }, [filterStatus]);
+
+  const fetchAssignments = async () => {
+    try {
+      setLoading(true);
+      const response = await teacherApiService.getAssignments({
+        status: filterStatus
+      });
+      setAssignments(response.assignments);
+      if (response.assignments.length > 0 && !selectedAssignment) {
+        setSelectedAssignment(response.assignments[0].id);
+      }
+    } catch (err) {
+      console.error('Error fetching assignments:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const currentAssignment = assignments.find(assign => assign.id === selectedAssignment);
   
-  const filteredAssignments = filterStatus === 'all' 
-    ? data.assignments 
-    : data.assignments.filter(assign => assign.status === filterStatus);
+  const filteredAssignments = assignments.filter(assign => {
+    const statusMatch = filterStatus === 'all' || assign.status === filterStatus;
+    return statusMatch;
+  });
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -37,8 +81,49 @@ const Assignments = () => {
     return { status: 'upcoming', text: 'Upcoming', color: '#4CAF50' };
   };
 
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const assignmentData = {
+        ...createForm,
+        content: puzzleData ? JSON.stringify(puzzleData) : createForm.content
+      };
+      await teacherApiService.createAssignment(assignmentData);
+      setShowCreateModal(false);
+      setShowPuzzleCreator(false);
+      setPuzzleData(null);
+      setCreateForm({
+        title: '',
+        subject: '',
+        grade: '',
+        content: '',
+        description: '',
+        difficulty: 'beginner',
+        estimatedDuration: '',
+        dueDate: '',
+        assignmentType: 'lesson',
+        puzzleType: '',
+        instructions: []
+      });
+      fetchAssignments();
+    } catch (err) {
+      console.error('Error creating assignment:', err);
+      setError(err.message);
+    }
+  };
+
+  const handlePuzzleSave = (puzzle) => {
+    setPuzzleData(puzzle);
+    setShowPuzzleCreator(false);
+  };
+
+  const handleCreatePuzzle = () => {
+    setShowPuzzleCreator(true);
+    setCreateForm(prev => ({ ...prev, assignmentType: 'puzzle' }));
+  };
+
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-container assignments-page">
     <div className="page-container">
       <div className="page-header">
           <div className="header-content">
@@ -54,6 +139,67 @@ const Assignments = () => {
                 : 'Manage assignments and track submissions'
               }
             </p>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="quick-actions-section">
+          <div className="quick-actions-header">
+            <h3>
+              {currentLanguage === 'rw' ? 'Ikorwa Ryihuse' : 'Quick Actions'}
+            </h3>
+            <p>
+              {currentLanguage === 'rw' 
+                ? 'Tangiza ibyo biteganyijwe bishya cyangwa genzura ibyatangijwe'
+                : 'Create new assignments or manage existing ones'
+              }
+            </p>
+          </div>
+          <div className="quick-actions-buttons">
+            <button className="quick-action-btn primary">
+              <div className="action-icon">➕</div>
+              <div className="action-content">
+                <span className="action-title">
+                  {currentLanguage === 'rw' ? 'Tangiza Icyo Biteganyijwe' : 'Create Assignment'}
+                </span>
+                <span className="action-subtitle">
+                  {currentLanguage === 'rw' ? 'Tangiza ibyo biteganyijwe bishya' : 'Create new assignment for students'}
+                </span>
+              </div>
+            </button>
+            <button className="quick-action-btn secondary">
+              <div className="action-icon">📊</div>
+              <div className="action-content">
+                <span className="action-title">
+                  {currentLanguage === 'rw' ? 'Raporo' : 'View Reports'}
+                </span>
+                <span className="action-subtitle">
+                  {currentLanguage === 'rw' ? 'Reba raporo y\'imikurire' : 'View assignment performance reports'}
+                </span>
+              </div>
+            </button>
+            <button className="quick-action-btn secondary">
+              <div className="action-icon">📋</div>
+              <div className="action-content">
+                <span className="action-title">
+                  {currentLanguage === 'rw' ? 'Genzura' : 'Grade Submissions'}
+                </span>
+                <span className="action-subtitle">
+                  {currentLanguage === 'rw' ? 'Genzura ibyatangijwe' : 'Review and grade student submissions'}
+                </span>
+              </div>
+            </button>
+            <button className="quick-action-btn secondary" onClick={handleCreatePuzzle}>
+              <div className="action-icon">🧩</div>
+              <div className="action-content">
+                <span className="action-title">
+                  {currentLanguage === 'rw' ? 'Tangiza Puzzle' : 'Create Puzzle'}
+                </span>
+                <span className="action-subtitle">
+                  {currentLanguage === 'rw' ? 'Tangiza puzzle ry\'amahugurwa' : 'Create interactive puzzle lessons'}
+                </span>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -84,9 +230,34 @@ const Assignments = () => {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Loading assignments...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="error-container">
+            <p>Error loading assignments: {error}</p>
+            <button onClick={fetchAssignments} className="action-btn primary">
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Assignments Grid */}
-        <div className="assignments-grid">
-          {filteredAssignments.map((assignment) => {
+        {!loading && !error && (
+          <div className="assignments-grid">
+            {filteredAssignments.length === 0 ? (
+              <div className="no-assignments">
+                <h3>No assignments found</h3>
+                <p>Create your first assignment to get started!</p>
+              </div>
+            ) : (
+              filteredAssignments.map((assignment) => {
             const dueStatus = getDueDateStatus(assignment.dueDate);
             return (
               <div 
@@ -157,28 +328,30 @@ const Assignments = () => {
                 </div>
               </div>
             );
-          })}
-        </div>
+          })
+            )}
+          </div>
+        )}
 
         {/* Selected Assignment Details */}
-        {currentAssignment && (
+        {currentAssignment && !loading && !error && (
           <div className="assignment-details">
             <div className="assignment-detail-header">
               <div className="assignment-info">
-                <h2>{currentAssignment.title}</h2>
-                <p>{currentAssignment.class}</p>
+                <h2>{currentAssignment.title || 'Untitled Assignment'}</h2>
+                <p>{currentAssignment.class || 'No class assigned'}</p>
                 <div className="assignment-meta-detail">
                   <span>
                     <Icon name="calendar" size={16} style={{ marginRight: '4px' }} />
-                    {new Date(currentAssignment.dueDate).toLocaleDateString()}
+                    {currentAssignment.dueDate ? new Date(currentAssignment.dueDate).toLocaleDateString() : 'No due date'}
                   </span>
                   <span>
                     <Icon name="users" size={16} style={{ marginRight: '4px' }} />
-                    {currentAssignment.totalStudents} {currentLanguage === 'rw' ? 'abanyeshuri' : 'students'}
+                    {currentAssignment.totalStudents || 0} {currentLanguage === 'rw' ? 'abanyeshuri' : 'students'}
                   </span>
                   <span>
                     <Icon name="check" size={16} style={{ marginRight: '4px' }} />
-                    {currentAssignment.submitted} {currentLanguage === 'rw' ? 'yatangije' : 'submitted'}
+                    {currentAssignment.submitted || 0} {currentLanguage === 'rw' ? 'yatangije' : 'submitted'}
                   </span>
                 </div>
               </div>
@@ -200,7 +373,7 @@ const Assignments = () => {
                 <h3>
                   {currentLanguage === 'rw' ? 'Ibisobanuro' : 'Description'}
                 </h3>
-                <p>{currentAssignment.description}</p>
+                <p>{currentAssignment.description || 'No description available'}</p>
               </div>
 
               <div className="instructions-section">
@@ -208,7 +381,7 @@ const Assignments = () => {
                   {currentLanguage === 'rw' ? 'Amabwiriza' : 'Instructions'}
                 </h3>
                 <ol>
-                  {currentAssignment.instructions.map((instruction, index) => (
+                  {(currentAssignment.instructions || []).map((instruction, index) => (
                     <li key={index}>{instruction}</li>
                   ))}
                 </ol>
@@ -219,7 +392,7 @@ const Assignments = () => {
                   {currentLanguage === 'rw' ? 'Ibyatangijwe' : 'Submissions'}
                 </h3>
                 <div className="submissions-list">
-                  {currentAssignment.submissions.map((submission, index) => (
+                  {(currentAssignment.submissions || []).map((submission, index) => (
                     <div key={index} className="submission-item">
                       <div className="submission-header">
                         <span className="student-name">{submission.studentName}</span>
@@ -262,7 +435,7 @@ const Assignments = () => {
                 <Icon name="assignment" size={24} />
               </div>
               <div className="stat-content">
-                <h3>{data.summary.totalAssignments}</h3>
+                <h3>{assignments.length}</h3>
                 <p>
                   {currentLanguage === 'rw' ? 'Ibyo Biteganyijwe Byose' : 'Total Assignments'}
                 </p>
@@ -273,7 +446,7 @@ const Assignments = () => {
                 <Icon name="check" size={24} />
               </div>
               <div className="stat-content">
-                <h3>{data.summary.activeAssignments}</h3>
+                <h3>{assignments.filter(a => a.status === 'active').length}</h3>
                 <p>
                   {currentLanguage === 'rw' ? 'Bikora' : 'Active'}
                 </p>
@@ -284,7 +457,7 @@ const Assignments = () => {
                 <Icon name="calendar" size={24} />
               </div>
               <div className="stat-content">
-                <h3>{data.summary.upcomingAssignments}</h3>
+                <h3>{assignments.filter(a => a.status === 'upcoming').length}</h3>
                 <p>
                   {currentLanguage === 'rw' ? 'Bitegereje' : 'Upcoming'}
                 </p>
@@ -295,14 +468,25 @@ const Assignments = () => {
                 <Icon name="analytics" size={24} />
               </div>
               <div className="stat-content">
-                <h3>{data.summary.totalSubmissions}</h3>
+                <h3>{assignments.reduce((sum, a) => sum + (a.submissions || 0), 0)}</h3>
                 <p>
                   {currentLanguage === 'rw' ? 'Ibyatangijwe Byose' : 'Total Submissions'}
                 </p>
-              </div>
-            </div>
       </div>
         </div>
+      </div>
+        </div>
+        {/* Puzzle Creator Modal */}
+        {showPuzzleCreator && (
+          <div className="modal-overlay">
+            <div className="modal-content puzzle-creator-modal">
+              <PuzzleCreator 
+                onSave={handlePuzzleSave}
+                onCancel={() => setShowPuzzleCreator(false)}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

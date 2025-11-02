@@ -1,19 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../lib/language';
 import Icon from '../../components/icons/Icon';
-import adminMockDataService from '../../services/adminMockDataService';
+import adminApiService from '../../services/adminApiService';
 import './AdminPages.css';
 
 const ContentManagement = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('lessons');
-  const [content] = useState(adminMockDataService.getContent());
+  const [content, setContent] = useState({
+    lessons: [],
+    assignments: [],
+    quizzes: [],
+    courses: []
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const filteredLessons = content.lessons.filter(lesson => {
+  useEffect(() => {
+    fetchContent();
+  }, []);
+
+  const fetchContent = async () => {
+    try {
+      setLoading(true);
+      const response = await adminApiService.getContent();
+      if (response.success && response.content) {
+        // The API returns content as an array, we need to structure it properly
+        setContent({
+          lessons: response.content,
+          assignments: [],
+          quizzes: [],
+          courses: []
+        });
+      } else {
+        // Fallback data
+        setContent({
+          lessons: [],
+          assignments: [],
+          quizzes: [],
+          courses: []
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching content:', err);
+      setError(err.message);
+      // Use empty fallback data
+      setContent({
+        lessons: [],
+        assignments: [],
+        quizzes: [],
+        courses: []
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredLessons = (content.lessons || []).filter(lesson => {
     const matchesSearch = lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         lesson.category.toLowerCase().includes(searchTerm.toLowerCase());
+                         (lesson.subject && lesson.subject.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || lesson.status === statusFilter;
     
     return matchesSearch && matchesStatus;
@@ -29,13 +76,40 @@ const ContentManagement = () => {
   };
 
   const getLevelColor = (level) => {
-    switch (level) {
-      case 'Beginner': return '#4CAF50';
-      case 'Intermediate': return '#FF9800';
-      case 'Advanced': return '#F44336';
+    switch (level?.toLowerCase()) {
+      case 'beginner': return '#4CAF50';
+      case 'intermediate': return '#FF9800';
+      case 'advanced': return '#F44336';
       default: return '#9E9E9E';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="admin-page">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <h2>Loading Content...</h2>
+          <p>Fetching content data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-page">
+        <div className="error-container">
+          <div className="error-icon">⚠️</div>
+          <h2>Error Loading Content</h2>
+          <p>{error}</p>
+          <button onClick={fetchContent} className="retry-button">
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-page">
@@ -51,14 +125,14 @@ const ContentManagement = () => {
           onClick={() => setActiveTab('lessons')}
         >
           <Icon name="book" size={20} />
-          Lessons ({content.lessons.length})
+          Lessons ({content.lessons?.length || 0})
         </button>
         <button 
           className={`tab-button ${activeTab === 'courses' ? 'active' : ''}`}
           onClick={() => setActiveTab('courses')}
         >
           <Icon name="course" size={20} />
-          Courses ({content.courses.length})
+          Courses ({content.courses?.length || 0})
         </button>
       </div>
 
@@ -91,7 +165,7 @@ const ContentManagement = () => {
             <Icon name="book" size={24} />
           </div>
           <div className="stat-content">
-            <div className="stat-number">{content.lessons.length}</div>
+            <div className="stat-number">{content.lessons?.length || 0}</div>
             <div className="stat-label">Total Lessons</div>
           </div>
         </div>
@@ -101,7 +175,7 @@ const ContentManagement = () => {
             <Icon name="check" size={24} />
           </div>
           <div className="stat-content">
-            <div className="stat-number">{content.lessons.filter(l => l.status === 'published').length}</div>
+            <div className="stat-number">{(content.lessons || []).filter(l => l.status === 'published').length}</div>
             <div className="stat-label">Published</div>
           </div>
         </div>
@@ -112,7 +186,7 @@ const ContentManagement = () => {
           </div>
           <div className="stat-content">
             <div className="stat-number">
-              {content.lessons.reduce((sum, lesson) => sum + lesson.views, 0)}
+              {(content.lessons || []).reduce((sum, lesson) => sum + (lesson.views || 0), 0)}
             </div>
             <div className="stat-label">Total Views</div>
           </div>
@@ -124,7 +198,7 @@ const ContentManagement = () => {
           </div>
           <div className="stat-content">
             <div className="stat-number">
-              {content.lessons.reduce((sum, lesson) => sum + lesson.completions, 0)}
+              {(content.lessons || []).reduce((sum, lesson) => sum + (lesson.completions || 0), 0)}
             </div>
             <div className="stat-label">Completions</div>
           </div>
@@ -152,12 +226,12 @@ const ContentManagement = () => {
               </div>
               
               <div className="content-meta">
-                <span className="category-badge">{lesson.category}</span>
+                <span className="category-badge">{lesson.subject || lesson.moduleType}</span>
                 <span 
                   className="level-badge" 
-                  style={{ backgroundColor: getLevelColor(lesson.level) }}
+                  style={{ backgroundColor: getLevelColor(lesson.difficulty) }}
                 >
-                  {lesson.level}
+                  {lesson.difficulty}
                 </span>
                 <span 
                   className="status-badge" 
@@ -170,29 +244,29 @@ const ContentManagement = () => {
               <div className="content-details">
                 <div className="detail-item">
                   <Icon name="clock" size={16} />
-                  <span>{lesson.duration}</span>
+                  <span>{lesson.estimatedDuration || 'N/A'} min</span>
                 </div>
                 <div className="detail-item">
                   <Icon name="eye" size={16} />
-                  <span>{lesson.views} views</span>
+                  <span>{lesson.views || 0} views</span>
                 </div>
                 <div className="detail-item">
                   <Icon name="check" size={16} />
-                  <span>{lesson.completions} completions</span>
+                  <span>{lesson.completions || 0} completions</span>
                 </div>
                 <div className="detail-item">
                   <Icon name="star" size={16} />
-                  <span>{lesson.rating}/5</span>
+                  <span>{lesson.rating || 0}/5</span>
                 </div>
               </div>
               
               <div className="content-footer">
                 <div className="author-info">
                   <Icon name="teacher" size={16} />
-                  <span>By {lesson.author}</span>
+                  <span>By {lesson.teacher?.fullName || 'Unknown'}</span>
                 </div>
                 <div className="last-updated">
-                  Updated {new Date(lesson.lastUpdated).toLocaleDateString()}
+                  Updated {new Date(lesson.updatedAt).toLocaleDateString()}
                 </div>
               </div>
             </div>

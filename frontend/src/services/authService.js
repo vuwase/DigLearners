@@ -1,7 +1,7 @@
 // Authentication Service
 import axios from 'axios'
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api'
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api'
 
 // Create axios instance
 const api = axios.create({
@@ -30,7 +30,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Don't redirect on 401 if we're already on login page or during login attempts
+    const isLoginPage = window.location.pathname === '/login' || window.location.pathname === '/login/'
+    const isLoginRequest = error.config?.url?.includes('/auth/login')
+    
+    if (error.response?.status === 401 && !isLoginPage && !isLoginRequest) {
+      console.log('[authService] 401 error - redirecting to login', {
+        pathname: window.location.pathname,
+        url: error.config?.url
+      })
       localStorage.removeItem('authToken')
       window.location.href = '/login'
     }
@@ -42,20 +50,121 @@ export const authService = {
   // Login user
   async login(credentials) {
     try {
+      console.log('[authService] Login attempt:', { 
+        email: credentials.email, 
+        loginType: credentials.loginType 
+      })
+      console.log('[authService] Making request to:', API_BASE_URL + '/auth/login')
+      
       const response = await api.post('/auth/login', credentials)
+      console.log('[authService] Login response received:', {
+        success: response.data?.success,
+        hasUser: !!response.data?.user,
+        hasToken: !!response.data?.token,
+        message: response.data?.message
+      })
+      
+      if (!response.data) {
+        console.error('[authService] ERROR: No data in response!')
+        throw new Error('No response data received from server')
+      }
+      
       return response.data
     } catch (error) {
-      throw new Error(error.response?.data?.error || 'Login failed')
+      console.error('[authService] Login error caught:', error)
+      console.error('[authService] Error details:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+        code: error.code,
+        config: error.config
+      })
+      
+      let errorMessage = 'Login failed'
+      let errorType = 'unknown_error'
+      
+      // Handle network errors
+      if (!error.response) {
+        console.error('[authService] Network error - no response from server')
+        if (error.code === 'ECONNABORTED') {
+          errorMessage = 'Connection timeout. Please check your internet connection and try again.'
+          errorType = 'timeout_error'
+        } else if (error.message.includes('Network Error') || error.message.includes('Failed to fetch')) {
+          errorMessage = 'Network error. Please check your internet connection and ensure the backend is running on ' + API_BASE_URL
+          errorType = 'network_error'
+        } else {
+          errorMessage = 'Unable to connect to server. Please check if the backend is running on ' + API_BASE_URL
+          errorType = 'connection_error'
+        }
+      } else {
+        // Handle API response errors
+        console.error('[authService] API error response:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        })
+        
+        const errorData = error.response?.data
+        errorMessage = errorData?.error || `Login failed (Status: ${error.response.status})`
+        errorType = errorData?.errorType || 'api_error'
+      }
+      
+      // Create enhanced error object with specific details
+      const enhancedError = new Error(errorMessage)
+      enhancedError.type = errorType
+      enhancedError.status = error.response?.status
+      enhancedError.originalError = error
+      
+      console.error('[authService] Throwing enhanced error:', {
+        message: enhancedError.message,
+        type: enhancedError.type,
+        status: enhancedError.status
+      })
+      
+      throw enhancedError
     }
   },
 
   // Register user
   async register(userData) {
     try {
+      console.log('Registration attempt:', { ...userData, password: '***' })
       const response = await api.post('/auth/register', userData)
+      console.log('Registration response:', response.data)
       return response.data
     } catch (error) {
-      throw new Error(error.response?.data?.error || 'Registration failed')
+      console.error('Registration error:', error)
+      let errorMessage = 'Registration failed'
+      
+      // Handle network errors
+      if (!error.response) {
+        if (error.code === 'ECONNABORTED') {
+          errorMessage = 'Connection timeout. Please check your internet connection and try again.'
+        } else if (error.message.includes('Network Error')) {
+          errorMessage = 'Network error. Please check your internet connection and try again.'
+        } else {
+          errorMessage = 'Unable to connect to server. Please check if the backend is running on ' + API_BASE_URL
+        }
+      } else {
+        // Handle API response errors
+        const errorData = error.response?.data
+        errorMessage = errorData?.error || `Registration failed (Status: ${error.response.status})`
+        
+        // Add more context for common errors
+        if (error.response.status === 400) {
+          errorMessage = errorData?.error || 'Invalid registration data. Please check your information.'
+        } else if (error.response.status === 409 || errorData?.error?.includes('already exists')) {
+          errorMessage = errorData?.error || 'An account with this email already exists. Please login instead.'
+        } else if (error.response.status === 500) {
+          errorMessage = errorData?.error || 'Server error during registration. Please try again later.'
+        }
+      }
+      
+      const enhancedError = new Error(errorMessage)
+      enhancedError.status = error.response?.status
+      enhancedError.data = error.response?.data
+      throw enhancedError
     }
   },
 

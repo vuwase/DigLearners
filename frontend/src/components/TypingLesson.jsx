@@ -219,6 +219,7 @@ export default function TypingLesson({ lesson, onComplete, onProgress }) {
           <li>Don't worry about speed - accuracy first!</li>
         </ul>
       </div>
+      </div>
     </div>
   )
 }

@@ -246,6 +246,7 @@ export default function SafeBrowsingLesson({ lesson, onComplete, onProgress }) {
           <li>Be kind and respectful online</li>
         </ul>
       </div>
+      </div>
     </div>
   )
 }

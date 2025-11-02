@@ -1,13 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../lib/language';
 import Icon from '../../components/icons/Icon';
-import adminMockDataService from '../../services/adminMockDataService';
+import adminApiService from '../../services/adminApiService';
 import './AdminPages.css';
 
 const Analytics = () => {
   const { t } = useTranslation();
-  const [analytics] = useState(adminMockDataService.getAnalytics());
+  const [analytics, setAnalytics] = useState({
+    overview: {
+      totalUsers: 0,
+      activeUsers: 0,
+      totalLessons: 0,
+      completedLessons: 0,
+      averageEngagement: 0,
+      systemHealth: 'Good'
+    },
+    userEngagement: [],
+    contentPerformance: [],
+    systemMetrics: []
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [selectedPeriod]);
+
+  const fetchAnalytics = async () => {
+    try {
+      setLoading(true);
+      const response = await adminApiService.getAnalytics(selectedPeriod);
+      if (response.data) {
+        setAnalytics(response.data);
+      } else {
+        // Set fallback data
+        setAnalytics({
+          overview: {
+            totalUsers: 0,
+            activeUsers: 0,
+            totalLessons: 0,
+            completedLessons: 0,
+            averageEngagement: 0,
+            systemHealth: 'Good'
+          },
+          userEngagement: [],
+          contentPerformance: [],
+          systemMetrics: []
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching analytics:', err);
+      setError(err.message);
+      // Set fallback data
+      setAnalytics({
+        overview: {
+          totalUsers: 0,
+          activeUsers: 0,
+          totalLessons: 0,
+          completedLessons: 0,
+          averageEngagement: 0,
+          systemHealth: 'Good'
+        },
+        userEngagement: [],
+        contentPerformance: [],
+        systemMetrics: []
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getEngagementColor = (value, max) => {
     const percentage = (value / max) * 100;
@@ -15,6 +77,33 @@ const Analytics = () => {
     if (percentage >= 60) return '#FF9800';
     return '#F44336';
   };
+
+  if (loading) {
+    return (
+      <div className="admin-page">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <h2>Loading Analytics...</h2>
+          <p>Fetching analytics data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-page">
+        <div className="error-container">
+          <div className="error-icon">⚠️</div>
+          <h2>Error Loading Analytics</h2>
+          <p>{error}</p>
+          <button onClick={fetchAnalytics} className="retry-button">
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-page">
@@ -59,7 +148,7 @@ const Analytics = () => {
             <Icon name="users" size={32} />
           </div>
           <div className="metric-content">
-            <div className="metric-number">{analytics.overview.totalUsers.toLocaleString()}</div>
+            <div className="metric-number">{(analytics.overview.totalUsers || 0).toLocaleString()}</div>
             <div className="metric-label">Total Users</div>
             <div className="metric-change positive">
               <Icon name="arrow-up" size={16} />
@@ -73,7 +162,7 @@ const Analytics = () => {
             <Icon name="check" size={32} />
           </div>
           <div className="metric-content">
-            <div className="metric-number">{analytics.overview.activeUsers.toLocaleString()}</div>
+            <div className="metric-number">{(analytics.overview.activeUsers || 0).toLocaleString()}</div>
             <div className="metric-label">Active Users</div>
             <div className="metric-change positive">
               <Icon name="arrow-up" size={16} />
@@ -87,7 +176,7 @@ const Analytics = () => {
             <Icon name="book" size={32} />
           </div>
           <div className="metric-content">
-            <div className="metric-number">{analytics.overview.totalLessons}</div>
+            <div className="metric-number">{analytics.overview?.totalLessons || 0}</div>
             <div className="metric-label">Total Lessons</div>
             <div className="metric-change positive">
               <Icon name="arrow-up" size={16} />
@@ -101,7 +190,7 @@ const Analytics = () => {
             <Icon name="achievement" size={32} />
           </div>
           <div className="metric-content">
-            <div className="metric-number">{analytics.overview.completedLessons.toLocaleString()}</div>
+            <div className="metric-number">{(analytics.overview.completedLessons || 0).toLocaleString()}</div>
             <div className="metric-label">Completed Lessons</div>
             <div className="metric-change positive">
               <Icon name="arrow-up" size={16} />
@@ -127,7 +216,7 @@ const Analytics = () => {
               <Icon name="analytics" size={48} />
               <p>User Growth Chart</p>
               <div className="chart-data">
-                {analytics.userGrowth.map((data, index) => (
+                {(analytics.userGrowth || []).map((data, index) => (
                   <div key={index} className="data-point">
                     <div className="data-bar" style={{ height: `${(data.users / 600) * 100}%` }}></div>
                     <span className="data-label">{data.month}</span>
@@ -150,7 +239,7 @@ const Analytics = () => {
           </div>
           <div className="chart-content">
             <div className="performance-list">
-              {analytics.lessonPerformance.map((lesson, index) => (
+              {(analytics.lessonPerformance || []).map((lesson, index) => (
                 <div key={index} className="performance-item">
                   <div className="lesson-info">
                     <div className="lesson-name">{lesson.lesson}</div>
@@ -186,7 +275,7 @@ const Analytics = () => {
               <Icon name="clock" size={24} />
             </div>
             <div className="engagement-content">
-              <div className="engagement-number">{analytics.userEngagement.dailyActiveUsers}</div>
+              <div className="engagement-number">{analytics.userEngagement?.dailyActiveUsers || 0}</div>
               <div className="engagement-label">Daily Active Users</div>
             </div>
           </div>
@@ -196,7 +285,7 @@ const Analytics = () => {
               <Icon name="calendar" size={24} />
             </div>
             <div className="engagement-content">
-              <div className="engagement-number">{analytics.userEngagement.weeklyActiveUsers}</div>
+              <div className="engagement-number">{analytics.userEngagement?.weeklyActiveUsers || 0}</div>
               <div className="engagement-label">Weekly Active Users</div>
             </div>
           </div>
@@ -206,7 +295,7 @@ const Analytics = () => {
               <Icon name="users" size={24} />
             </div>
             <div className="engagement-content">
-              <div className="engagement-number">{analytics.userEngagement.monthlyActiveUsers}</div>
+              <div className="engagement-number">{analytics.userEngagement?.monthlyActiveUsers || 0}</div>
               <div className="engagement-label">Monthly Active Users</div>
             </div>
           </div>
@@ -216,7 +305,7 @@ const Analytics = () => {
               <Icon name="clock" size={24} />
             </div>
             <div className="engagement-content">
-              <div className="engagement-number">{analytics.userEngagement.averageSessionTime}</div>
+              <div className="engagement-number">{analytics.userEngagement?.averageSessionTime || '0 min'}</div>
               <div className="engagement-label">Avg Session Time</div>
             </div>
           </div>

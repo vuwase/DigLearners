@@ -58,7 +58,7 @@ const Footer = () => {
             <ul>
               <li><Link to="/">{currentLanguage === 'rw' ? 'Ahabanza' : 'Home'}</Link></li>
               <li><Link to="/login">{currentLanguage === 'rw' ? 'Kwinjira' : 'Login'}</Link></li>
-              <li><Link to="/register">{currentLanguage === 'rw' ? 'Kwiyandikisha' : 'Register'}</Link></li>
+              <li><Link to="/enroll">{currentLanguage === 'rw' ? 'Kwiyandikisha' : 'Register'}</Link></li>
               <li><Link to="/dashboard">{currentLanguage === 'rw' ? 'Ikibaho' : 'Dashboard'}</Link></li>
             </ul>
           </div>
@@ -67,10 +67,8 @@ const Footer = () => {
           <div className="footer-links">
             <h4>{currentLanguage === 'rw' ? 'Amasomo' : 'Learning'}</h4>
             <ul>
-              <li><Link to="/dashboard/lessons">{currentLanguage === 'rw' ? 'Amasomo yanjye' : 'My Lessons'}</Link></li>
-              <li><Link to="/dashboard/progress">{currentLanguage === 'rw' ? 'Intambwe' : 'Progress'}</Link></li>
+              <li><Link to="/dashboard/games">{currentLanguage === 'rw' ? 'Amasomo yanjye' : 'My Games'}</Link></li>
               <li><Link to="/dashboard/achievements">{currentLanguage === 'rw' ? 'Intsinzi' : 'Achievements'}</Link></li>
-              <li><Link to="/dashboard/leaderboard">{currentLanguage === 'rw' ? 'Urutonde' : 'Leaderboard'}</Link></li>
             </ul>
           </div>
 

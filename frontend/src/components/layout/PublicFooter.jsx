@@ -33,7 +33,7 @@ const PublicFooter = () => {
             <ul>
               <li><Link to="/">{currentLanguage === 'rw' ? 'Ahabanza' : 'Home'}</Link></li>
               <li><Link to="/login">{currentLanguage === 'rw' ? 'Kwinjira' : 'Login'}</Link></li>
-              <li><Link to="/register">{currentLanguage === 'rw' ? 'Kwiyandikisha' : 'Register'}</Link></li>
+              <li><Link to="/enroll">{currentLanguage === 'rw' ? 'Kwiyandikisha' : 'Register'}</Link></li>
             </ul>
           </div>
 

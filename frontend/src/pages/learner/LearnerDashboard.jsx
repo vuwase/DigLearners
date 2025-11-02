@@ -1,559 +1,458 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import Icon from '../../components/icons/Icon';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import gamifiedApiService from '../../services/gamifiedApiService';
+import learnerApiService from '../../services/learnerApiService';
 
 const LearnerDashboard = () => {
-  const codingCourses = [
-    {
-      id: 1,
-      title: "🎮 Block Coding Adventure",
-      description: "Learn to code with colorful blocks! Drag and drop to create amazing programs!",
-      progress: 75,
-      difficulty: "Easy",
-      color: "#FF677D",
-      icon: "🧩",
-      lessons: 8,
-      completed: 6
-    },
-    {
-      id: 2,
-      title: "⌨️ Typing Superhero",
-      description: "Become a typing superhero! Learn to type fast and accurately!",
-      progress: 60,
-      difficulty: "Medium",
-      color: "#F8B400",
-      icon: "⌨️",
-      lessons: 10,
-      completed: 6
-    },
-    {
-      id: 3,
-      title: "🛡️ Safe Internet Explorer",
-      description: "Learn how to stay safe on the internet! Be a smart digital citizen!",
-      progress: 40,
-      difficulty: "Easy",
-      color: "#B9FBC0",
-      icon: "🛡️",
-      lessons: 6,
-      completed: 2
-    },
-    {
-      id: 4,
-      title: "🎨 Digital Art Creator",
-      description: "Create amazing digital art! Learn to draw and design on the computer!",
-      progress: 20,
-      difficulty: "Medium",
-      color: "#FFB3BA",
-      icon: "🎨",
-      lessons: 5,
-      completed: 1
-    }
-  ];
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [gamifiedContent, setGamifiedContent] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userStats, setUserStats] = useState({
+    totalPoints: 0,
+    badgesEarned: 0,
+    gamesCompleted: 0,
+    currentStreak: 0
+  });
+  const [recentBadges, setRecentBadges] = useState([]);
 
-  const achievements = [
-    { id: 1, title: "First Steps", icon: "👶", description: "Completed your first lesson!" },
-    { id: 2, title: "Block Master", icon: "🧩", description: "Finished 5 block coding lessons!" },
-    { id: 3, title: "Speed Demon", icon: "⚡", description: "Typed 30 words per minute!" },
-    { id: 4, title: "Safety Hero", icon: "🛡️", description: "Learned all internet safety rules!" }
-  ];
+  useEffect(() => {
+    // Auto-set age group based on student's grade if available
+    let selectedAgeGroup = localStorage.getItem('selectedAgeGroup');
+    
+    if (!selectedAgeGroup && user?.grade) {
+      // Map grade to age group
+      const gradeToAgeGroup = {
+        '1': '6-7',
+        'Grade 1': '6-7',
+        '2': '7-8',
+        'Grade 2': '7-8',
+        '3': '8-9',
+        'Grade 3': '8-9',
+        '4': '9-10',
+        'Grade 4': '9-10',
+        '5': '10-11',
+        'Grade 5': '10-11',
+        '6': '11-12',
+        'Grade 6': '11-12'
+      };
+      
+      const ageGroup = gradeToAgeGroup[user.grade];
+      if (ageGroup) {
+        localStorage.setItem('selectedAgeGroup', ageGroup);
+        selectedAgeGroup = ageGroup;
+        console.log('[LearnerDashboard] Auto-set age group based on grade:', user.grade, '->', ageGroup);
+      }
+    }
+    
+    if (!selectedAgeGroup) {
+      // If still no age group, redirect to age group selection
+      console.log('[LearnerDashboard] No age group found, redirecting to age-select');
+      navigate('/dashboard/age-select');
+      return;
+    }
+    
+    fetchDashboardData();
+    
+    // Check for new badges from localStorage (set after course completion)
+    const refreshFlag = localStorage.getItem('refreshDashboard');
+    if (refreshFlag === 'true') {
+      localStorage.removeItem('refreshDashboard');
+      // Refresh dashboard data after a short delay to ensure backend has updated
+      setTimeout(() => {
+        fetchDashboardData();
+      }, 1000);
+    }
+  }, [navigate, user]);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch user stats and recent badges
+      const [statsResponse, badgesResponse] = await Promise.all([
+        learnerApiService.getDashboardData().catch((err) => {
+          console.warn('Dashboard stats fetch failed:', err);
+          return { data: { stats: userStats } };
+        }),
+        learnerApiService.getAchievements().catch((err) => {
+          console.warn('Achievements fetch failed:', err);
+          return { badges: [] };
+        })
+      ]);
+
+      // Handle dashboard stats response
+      if (statsResponse && statsResponse.data && statsResponse.data.stats) {
+        setUserStats(statsResponse.data.stats);
+      }
+      
+      // Handle badges response - check both response formats
+      if (badgesResponse) {
+        const badges = badgesResponse.badges || badgesResponse.data?.badges || [];
+        setRecentBadges(badges.slice(0, 3));
+      }
+
+      // Try to get user's grade-specific content first
+      try {
+        const response = await gamifiedApiService.getMyContent();
+        const content = response.data || response;
+        if (Array.isArray(content)) {
+          setGamifiedContent(content.slice(0, 6)); // Show top 6 games
+        } else {
+          throw new Error('Invalid content format');
+        }
+      } catch (gradeError) {
+        console.warn('Grade-specific content fetch failed, trying age group:', gradeError);
+        // Fallback to age group content
+        const ageGroup = localStorage.getItem('selectedAgeGroup');
+        if (ageGroup) {
+          try {
+            const response = await gamifiedApiService.getContentByAgeGroup(ageGroup);
+            const content = response.data || response;
+            if (Array.isArray(content)) {
+              setGamifiedContent(content.slice(0, 6)); // Show top 6 games
+            }
+          } catch (ageError) {
+            console.warn('Age group content fetch also failed:', ageError);
+            // Set empty array as last resort
+            setGamifiedContent([]);
+          }
+        } else {
+          setGamifiedContent([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getGameTypeIcon = (gameType) => {
+    switch (gameType) {
+      case 'puzzle': return '🧩';
+      case 'quiz': return '❓';
+      case 'interactive': return '🎮';
+      case 'story': return '📚';
+      case 'simulation': return '🎯';
+      case 'creative': return '🎨';
+      default: return '🎮';
+    }
+  };
+
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty) {
+      case 'beginner': return '#10b981';
+      case 'intermediate': return '#f59e0b';
+      case 'advanced': return '#ef4444';
+      default: return '#6b7280';
+    }
+  };
+
+  const handleGameStart = (game) => {
+    localStorage.setItem('selectedGame', JSON.stringify(game));
+    // Navigate to the game player with the game data
+    navigate(`/dashboard/game/${game.id}`, { state: { game } });
+  };
 
   return (
-    <div className="kid-dashboard">
-      <div className="kid-header">
-        <div className="welcome-section">
-          <h1>🎉 Welcome to Your Learning Adventure!</h1>
-          <p>Hi there! Ready to learn some cool coding skills? Let's have fun! 🚀</p>
+    <div className="student-dashboard">
+      {/* Simple Welcome */}
+      <div className="simple-welcome">
+        <h1>🎮 Choose Your Game!</h1>
+      </div>
+
+      {/* Games Grid - Main Focus */}
+      <div className="main-games-section">
+        {loading ? (
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Loading your games...</p>
+          </div>
+        ) : (
+          <div className="games-grid">
+            {gamifiedContent.length > 0 ? (
+              gamifiedContent.map((game) => (
+                <div key={game.id} className="game-card">
+                  <div className="game-icon-large">
+                    {getGameTypeIcon(game.gameType)}
         </div>
-        <div className="kid-avatar">
-          <div className="avatar-circle">👦</div>
-          <div className="kid-info">
-            <h3>Alex</h3>
-            <p>Level 3 Explorer</p>
-            <div className="points-display">
-              <span>⭐ 850 Points</span>
+
+                  <h3 className="game-title">{game.title}</h3>
+                  <p className="game-description">{game.description}</p>
+                  
+                  <div className="game-rewards">
+                    <div className="reward-item">
+                      <span>⭐ {game.pointsReward} points</span>
+          </div>
+                    <div className="reward-item">
+                      <span>⏱️ {game.estimatedTime || 10} min</span>
+        </div>
+      </div>
+
+                  <button 
+                    className="play-button-large"
+                    onClick={() => handleGameStart(game)}
+                  >
+                    🎮 PLAY NOW!
+                  </button>
+            </div>
+              ))
+            ) : (
+              <div className="no-games">
+                <div className="no-games-icon">🎮</div>
+                <h3>Loading games...</h3>
+                <p>Getting your fun games ready!</p>
+          </div>
+            )}
+            </div>
+        )}
+          </div>
+
+      {/* Simple Badges at Bottom */}
+      <div className="simple-badges">
+        <h2>🏆 My Badges</h2>
+        <div className="badges-row">
+          {recentBadges.length > 0 ? (
+            recentBadges.slice(0, 3).map(badge => (
+              <div key={badge.id || badge.badgeId} className="badge-simple">
+                <div className="badge-icon">{badge.icon || badge.badge?.icon || '🏆'}</div>
+                <span>{badge.name || badge.title || badge.badge?.name || 'Badge'}</span>
+            </div>
+            ))
+          ) : (
+            <div className="badge-simple">
+              <div className="badge-icon">🏆</div>
+              <span>Complete courses to earn badges!</span>
+          </div>
+          )}
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="kid-stats">
-        <div className="stat-card stat-1">
-          <div className="stat-icon">📚</div>
-          <div className="stat-content">
-            <h3>12</h3>
-            <p>Lessons Done!</p>
-          </div>
-        </div>
-        <div className="stat-card stat-2">
-          <div className="stat-icon">🏆</div>
-          <div className="stat-content">
-            <h3>5</h3>
-            <p>Badges Won!</p>
-          </div>
-        </div>
-        <div className="stat-card stat-3">
-          <div className="stat-icon">⭐</div>
-          <div className="stat-content">
-            <h3>850</h3>
-            <p>Total Points!</p>
-          </div>
-        </div>
-        <div className="stat-card stat-4">
-          <div className="stat-icon">🔥</div>
-          <div className="stat-content">
-            <h3>7</h3>
-            <p>Day Streak!</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="coding-courses-section">
-        <h2>🎮 My Coding Courses</h2>
-        <div className="courses-grid">
-          {codingCourses.map(course => (
-            <div key={course.id} className="course-card" style={{ borderColor: course.color }}>
-              <div className="course-header">
-                <div className="course-icon">{course.icon}</div>
-                <div className="course-info">
-                  <h3>{course.title}</h3>
-                  <p>{course.description}</p>
-                </div>
-              </div>
-              
-              <div className="course-progress">
-                <div className="progress-bar">
-                  <div 
-                    className="progress-fill" 
-                    style={{ 
-                      width: `${course.progress}%`,
-                      backgroundColor: course.color 
-                    }}
-                  ></div>
-                </div>
-                <span className="progress-text">{course.progress}% Complete</span>
-              </div>
-              
-              <div className="course-stats">
-                <div className="stat">
-                  <span className="stat-number">{course.completed}</span>
-                  <span className="stat-label">of {course.lessons} lessons</span>
-                </div>
-                <div className="difficulty-badge" style={{ backgroundColor: course.color }}>
-                  {course.difficulty}
-                </div>
-              </div>
-              
-              <Link to={`/lesson/${course.id}`} className="start-course-btn" style={{ backgroundColor: course.color }}>
-                {course.completed > 0 ? 'Continue Learning! 🚀' : 'Start Course! 🎉'}
-              </Link>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="achievements-section">
-        <h2>🏆 My Achievements</h2>
-        <div className="achievements-grid">
-          {achievements.map(achievement => (
-            <div key={achievement.id} className="achievement-card">
-              <div className="achievement-icon">{achievement.icon}</div>
-              <div className="achievement-info">
-                <h4>{achievement.title}</h4>
-                <p>{achievement.description}</p>
-              </div>
-              <div className="achievement-badge">✅</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="quick-actions">
-        <h2>🎯 Quick Actions</h2>
-        <div className="actions-grid">
-          <Link to="/leaderboard" className="action-btn action-1">
-            <div className="action-icon">🏆</div>
-            <span>Leaderboard</span>
-          </Link>
-          <Link to="/achievements" className="action-btn action-2">
-            <div className="action-icon">⭐</div>
-            <span>My Badges</span>
-          </Link>
-          <Link to="/progress" className="action-btn action-3">
-            <div className="action-icon">📊</div>
-            <span>My Progress</span>
-          </Link>
-          <Link to="/lessons" className="action-btn action-4">
-            <div className="action-icon">📚</div>
-            <span>All Lessons</span>
-          </Link>
-        </div>
-      </div>
 
       <style dangerouslySetInnerHTML={{
         __html: `
-          .kid-dashboard {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #FFB3BA, #B9FBC0);
+          .student-dashboard {
+            min-height: calc(100vh - 80px);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 2rem;
             font-family: 'Comic Sans MS', cursive, sans-serif;
           }
 
-          .kid-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            padding: 2rem;
-            border-radius: 25px;
+          .simple-welcome {
+            text-align: center;
             margin-bottom: 2rem;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
           }
 
-          .welcome-section h1 {
-            color: #2D3748;
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-          }
-
-          .welcome-section p {
-            color: #4A5568;
-            font-size: 1.2rem;
+          .simple-welcome h1 {
+            color: white;
+            font-size: 3rem;
             margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
           }
 
-          .kid-avatar {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+          .main-games-section {
+            margin-bottom: 2rem;
           }
 
-          .avatar-circle {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #FF677D, #F8B400);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+          .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
           }
 
-          .kid-info h3 {
+          .game-card {
+            background: white;
+            border-radius: 25px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            border: 4px solid transparent;
+          }
+
+          .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border-color: #4facfe;
+          }
+
+          .game-icon-large {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+          }
+
+          .game-title {
             color: #2D3748;
             font-size: 1.5rem;
-            margin: 0 0 0.25rem 0;
+            margin: 0 0 1rem 0;
+            font-weight: bold;
           }
 
-          .kid-info p {
+          .game-description {
             color: #4A5568;
-            margin: 0 0 0.5rem 0;
+            margin: 0 0 1.5rem 0;
+            font-size: 1rem;
+            line-height: 1.4;
           }
 
-          .points-display {
-            background: linear-gradient(135deg, #FF677D, #F8B400);
-            color: white;
+          .game-rewards {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+          }
+
+          .reward-item {
+            background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+            color: #2d3436;
             padding: 0.5rem 1rem;
             border-radius: 20px;
             font-weight: bold;
             font-size: 0.9rem;
           }
 
-          .kid-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-          }
-
-          .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-          }
-
-          .stat-card:hover {
-            transform: translateY(-5px);
-          }
-
-          .stat-1 { border-left: 5px solid #FF677D; }
-          .stat-2 { border-left: 5px solid #F8B400; }
-          .stat-3 { border-left: 5px solid #B9FBC0; }
-          .stat-4 { border-left: 5px solid #FFB3BA; }
-
-          .stat-icon {
-            font-size: 2.5rem;
-          }
-
-          .stat-content h3 {
-            color: #2D3748;
-            font-size: 2rem;
-            margin: 0;
-            font-weight: bold;
-          }
-
-          .stat-content p {
-            color: #4A5568;
-            margin: 0;
-            font-size: 1rem;
-          }
-
-          .coding-courses-section {
-            background: white;
-            padding: 2rem;
-            border-radius: 25px;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-          }
-
-          .coding-courses-section h2 {
-            color: #2D3748;
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-          }
-
-          .courses-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-          }
-
-          .course-card {
-            background: white;
-            border: 3px solid;
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-          }
-
-          .course-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-          }
-
-          .course-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-          }
-
-          .course-icon {
-            font-size: 3rem;
-          }
-
-          .course-info h3 {
-            color: #2D3748;
-            font-size: 1.3rem;
-            margin: 0 0 0.5rem 0;
-          }
-
-          .course-info p {
-            color: #4A5568;
-            margin: 0;
-            font-size: 0.9rem;
-            line-height: 1.4;
-          }
-
-          .course-progress {
-            margin-bottom: 1rem;
-          }
-
-          .progress-bar {
-            background: #E2E8F0;
-            height: 8px;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-          }
-
-          .progress-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.3s ease;
-          }
-
-          .progress-text {
-            color: #4A5568;
-            font-size: 0.9rem;
-            font-weight: bold;
-          }
-
-          .course-stats {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-          }
-
-          .stat-number {
-            color: #2D3748;
-            font-size: 1.5rem;
-            font-weight: bold;
-          }
-
-          .stat-label {
-            color: #4A5568;
-            font-size: 0.9rem;
-          }
-
-          .difficulty-badge {
+          .play-button-large {
+            background: linear-gradient(135deg, #00b894, #00cec9);
             color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
             font-weight: bold;
-          }
-
-          .start-course-btn {
-            display: block;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
             width: 100%;
-            background: #FF677D;
+          }
+
+          .play-button-large:hover {
+            background: linear-gradient(135deg, #00a085, #00b7b3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+          }
+
+          .simple-badges {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 25px;
+            text-align: center;
+          }
+
+          .simple-badges h2 {
             color: white;
-            text-decoration: none;
-            padding: 1rem;
-            border-radius: 15px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-          }
-
-          .start-course-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-          }
-
-          .achievements-section {
-            background: white;
-            padding: 2rem;
-            border-radius: 25px;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-          }
-
-          .achievements-section h2 {
-            color: #2D3748;
             font-size: 2rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
+            margin: 0 0 1.5rem 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
           }
 
-          .achievements-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-          }
-
-          .achievement-card {
-            background: linear-gradient(135deg, #F8F9FA, #E8F5E8);
-            padding: 1rem;
-            border-radius: 15px;
+          .badges-row {
             display: flex;
-            align-items: center;
-            gap: 1rem;
-            border: 2px solid #E2E8F0;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
           }
 
-          .achievement-icon {
-            font-size: 2rem;
-          }
-
-          .achievement-info h4 {
-            color: #2D3748;
-            margin: 0 0 0.25rem 0;
-            font-size: 1rem;
-          }
-
-          .achievement-info p {
-            color: #4A5568;
-            margin: 0;
-            font-size: 0.8rem;
-          }
-
-          .achievement-badge {
-            font-size: 1.5rem;
-          }
-
-          .quick-actions {
-            background: white;
-            padding: 2rem;
-            border-radius: 25px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-          }
-
-          .quick-actions h2 {
-            color: #2D3748;
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-          }
-
-          .actions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-          }
-
-          .action-btn {
-            background: white;
-            border: 3px solid;
+          .badge-simple {
+            background: rgba(255,255,255,0.9);
+            padding: 1rem;
             border-radius: 20px;
-            padding: 1.5rem;
-            text-decoration: none;
-            text-align: center;
-            transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 0.5rem;
+            min-width: 100px;
+            transition: all 0.3s ease;
           }
 
-          .action-1 { border-color: #FF677D; }
-          .action-2 { border-color: #F8B400; }
-          .action-3 { border-color: #B9FBC0; }
-          .action-4 { border-color: #FFB3BA; }
-
-          .action-btn:hover {
+          .badge-simple:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            background: white;
           }
 
-          .action-icon {
-            font-size: 2rem;
+          .badge-simple .badge-icon {
+            font-size: 2.5rem;
           }
 
-          .action-btn span {
+          .badge-simple span {
             color: #2D3748;
             font-weight: bold;
             font-size: 0.9rem;
           }
 
+          .loading-container {
+            text-align: center;
+            padding: 3rem;
+            color: white;
+          }
+
+          .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+          }
+
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+
+          .no-games {
+            text-align: center;
+            padding: 3rem;
+            color: white;
+            grid-column: 1 / -1;
+          }
+
+          .no-games-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+          }
+
+          .no-games h3 {
+            font-size: 2rem;
+            margin: 0 0 1rem 0;
+          }
+
+          .no-games p {
+            font-size: 1.2rem;
+            margin: 0;
+          }
+
           @media (max-width: 768px) {
-            .kid-dashboard {
+            .student-dashboard {
               padding: 1rem;
             }
 
-            .kid-header {
-              flex-direction: column;
-              text-align: center;
-              gap: 1rem;
+            .simple-welcome h1 {
+              font-size: 2.5rem;
             }
 
-            .welcome-section h1 {
-              font-size: 2rem;
-            }
-
-            .courses-grid {
+            .games-grid {
               grid-template-columns: 1fr;
+              gap: 1.5rem;
+            }
+
+            .game-card {
+              padding: 1.5rem;
+            }
+
+            .game-icon-large {
+              font-size: 4rem;
+            }
+
+            .badges-row {
+              flex-direction: column;
+              align-items: center;
+              gap: 1rem;
             }
           }
         `

@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../lib/language';
 import Icon from '../../components/icons/Icon';
-import adminMockDataService from '../../services/adminMockDataService';
+import adminApiService from '../../services/adminApiService';
 import './AdminPages.css';
 
 const UserManagement = () => {
   const { t } = useTranslation();
-  const [users, setUsers] = useState(adminMockDataService.getUsers());
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -17,15 +19,37 @@ const UserManagement = () => {
     password: '',
     confirmPassword: ''
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState('');
   const [success, setSuccess] = useState('');
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await adminApiService.getUsers();
+      if (response.data) {
+        setUsers(response.data);
+      } else {
+        setUsers([]);
+      }
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      setError(err.message);
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (user.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (user.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || (user.isActive !== false ? 'active' : 'inactive') === statusFilter;
     
     return matchesSearch && matchesRole && matchesStatus;
   });
@@ -132,6 +156,33 @@ const UserManagement = () => {
     setError('');
     setSuccess('');
   };
+
+  if (loading) {
+    return (
+      <div className="admin-page">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <h2>Loading Users...</h2>
+          <p>Fetching user data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-page">
+        <div className="error-container">
+          <div className="error-icon">⚠️</div>
+          <h2>Error Loading Users</h2>
+          <p>{error}</p>
+          <button onClick={fetchUsers} className="retry-button">
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-page">
@@ -349,7 +400,7 @@ const UserManagement = () => {
                       <Icon name={getRoleIcon(user.role)} size={32} />
                     </div>
                     <div className="user-details">
-                      <div className="user-name">{user.name}</div>
+                      <div className="user-name">{user.fullName || 'Unknown User'}</div>
                       <div className="user-email">{user.email}</div>
                     </div>
                   </div>
@@ -363,10 +414,10 @@ const UserManagement = () => {
                 <td>
                   <span 
                     className="status-badge" 
-                    style={{ backgroundColor: getStatusColor(user.status) }}
+                    style={{ backgroundColor: getStatusColor(user.isActive !== false ? 'active' : 'inactive') }}
                   >
-                    <Icon name={user.status === 'active' ? 'check' : 'close'} size={12} />
-                    {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                    <Icon name={user.isActive !== false ? 'check' : 'close'} size={12} />
+                    {(user.isActive !== false ? 'active' : 'inactive').charAt(0).toUpperCase() + (user.isActive !== false ? 'active' : 'inactive').slice(1)}
                   </span>
                 </td>
                 <td>

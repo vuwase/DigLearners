@@ -40,11 +40,8 @@ const Home = () => {
             {t('welcome.description')}
           </p>
           <div className="hero-actions">
-            <Link to="/enroll" className="btn btn-primary">
-              {t('welcome.enrollChild')}
-            </Link>
-            <Link to="/login" className="btn btn-secondary">
-              {t('welcome.login')}
+            <Link to="/enroll" className="btn btn-primary btn-teacher-signup" style={{ cursor: 'pointer' }}>
+              {t('welcome.teacherSignUp')}
             </Link>
           </div>
         </div>
@@ -115,12 +112,13 @@ const Home = () => {
           <h2>{t('welcome.readyToStart')} 🚀</h2>
           <p>{t('welcome.joinThousands')}</p>
           <div className="cta-actions">
-            <Link to="/enroll" className="btn btn-primary btn-large">
-              {t('welcome.enrollToday')} 🎉
+            <Link to="/login?type=student" className="btn btn-student btn-large" style={{ cursor: 'pointer' }}>
+              <span className="login-icon">👨‍🎓</span>
+              {t('welcome.studentLogin')}
             </Link>
           </div>
           <div className="parent-note">
-            <p>👨‍👩‍👧‍👦 <strong>{t('welcome.forParents')}</strong> {t('welcome.parentNote')}</p>
+            <p>👨‍🏫 <strong>{t('welcome.forParents')}</strong> {t('welcome.parentNote')}</p>
           </div>
         </div>
       </section>
@@ -259,8 +257,20 @@ const Home = () => {
 
           .hero-actions {
             display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
+          }
+
+          .login-buttons {
+            display: flex;
             gap: 1rem;
             flex-wrap: wrap;
+            justify-content: center;
+          }
+
+          .btn-student.btn-large {
+            min-width: 200px;
           }
 
           .btn {
@@ -272,6 +282,9 @@ const Home = () => {
             display: inline-block;
             font-size: 1.1rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
           }
 
           .btn-primary {
@@ -286,6 +299,21 @@ const Home = () => {
             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
           }
 
+          .btn-teacher-signup {
+            background: #1E3A8A;
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            border-radius: 30px;
+          }
+
+          .btn-teacher-signup:hover {
+            background: #1E40AF;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(30, 58, 138, 0.4);
+          }
+
           .btn-secondary {
             background: transparent;
             color: white;
@@ -296,6 +324,44 @@ const Home = () => {
             background: white;
             color: var(--primary-color);
             transform: translateY(-3px) scale(1.05);
+          }
+
+          .btn-student {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            color: white;
+            border: 3px solid white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 160px;
+            justify-content: center;
+          }
+
+          .btn-student:hover {
+            background: linear-gradient(135deg, #3730A3, #5B21B6);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+          }
+
+          .btn-teacher {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+            border: 3px solid white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 160px;
+            justify-content: center;
+          }
+
+          .btn-teacher:hover {
+            background: linear-gradient(135deg, #047857, #065F46);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4);
+          }
+
+          .login-icon {
+            font-size: 1.2rem;
           }
 
           .btn-large {
@@ -571,6 +637,32 @@ const Home = () => {
 
             .hero-actions {
               justify-content: center;
+            }
+
+            .btn-teacher-signup {
+              width: 100%;
+              max-width: 300px;
+            }
+
+            .login-buttons {
+              flex-direction: column;
+              width: 100%;
+              max-width: 300px;
+            }
+
+            .btn-student, .btn-teacher {
+              width: 100%;
+              min-width: auto;
+            }
+
+            .cta-actions {
+              margin-bottom: 1.5rem;
+            }
+
+            .btn-student.btn-large {
+              width: 100%;
+              max-width: 300px;
+              min-width: auto;
             }
 
             .cartoon-characters {

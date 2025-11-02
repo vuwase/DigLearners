@@ -1,9 +1,74 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../components/icons/Icon';
+import adminApiService from '../../services/adminApiService';
 import '../../components/DashboardStyles.css';
 
 const AdminDashboard = () => {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await adminApiService.getDashboardData();
+      if (response.success && response.data) {
+        setDashboardData(response.data);
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError(err.message);
+      // Set fallback data
+      setDashboardData({
+        stats: {
+          totalUsers: 0,
+          totalTeachers: 0,
+          totalStudents: 0,
+          totalLessons: 0,
+          totalClasses: 0,
+          activeUsers: 0
+        },
+        recentUsers: [],
+        recentLessons: []
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  if (loading) {
+    return (
+      <div className="dashboard-container">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <h2>Loading Dashboard...</h2>
+          <p>Fetching latest data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard-container">
+        <div className="error-container">
+          <div className="error-icon">⚠️</div>
+          <h2>Error Loading Dashboard</h2>
+          <p>{error}</p>
+          <button onClick={fetchDashboardData} className="retry-button">
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard-container">
       <div className="page-container">
@@ -20,7 +85,7 @@ const AdminDashboard = () => {
             <Icon name="users" size={24} />
           </div>
           <div className="stat-content">
-            <h3>245</h3>
+            <h3>{dashboardData?.stats?.totalUsers || 0}</h3>
             <p>Total Users</p>
           </div>
         </div>
@@ -29,7 +94,7 @@ const AdminDashboard = () => {
             <Icon name="student" size={24} />
           </div>
           <div className="stat-content">
-            <h3>180</h3>
+            <h3>{dashboardData?.stats?.totalStudents || 0}</h3>
             <p>Active Learners</p>
           </div>
         </div>
@@ -38,7 +103,7 @@ const AdminDashboard = () => {
             <Icon name="teacher" size={24} />
           </div>
           <div className="stat-content">
-            <h3>15</h3>
+            <h3>{dashboardData?.stats?.totalTeachers || 0}</h3>
             <p>Teachers</p>
           </div>
         </div>
@@ -47,7 +112,7 @@ const AdminDashboard = () => {
             <Icon name="book" size={24} />
           </div>
           <div className="stat-content">
-            <h3>42</h3>
+            <h3>{dashboardData?.stats?.totalLessons || 0}</h3>
             <p>Total Lessons</p>
           </div>
         </div>
@@ -62,7 +127,7 @@ const AdminDashboard = () => {
             <h3>User Management</h3>
             <p>Manage all users, roles, and permissions</p>
             <div className="card-stats">
-              <span>245 total users</span>
+              <span>{dashboardData?.stats?.totalUsers || 0} total users</span>
             </div>
           </div>
           <div className="card-arrow">→</div>
@@ -76,7 +141,7 @@ const AdminDashboard = () => {
             <h3>Content Management</h3>
             <p>Create and manage educational content</p>
             <div className="card-stats">
-              <span>42 lessons available</span>
+              <span>{dashboardData?.stats?.totalLessons || 0} lessons available</span>
             </div>
           </div>
           <div className="card-arrow">→</div>
@@ -119,18 +184,6 @@ const AdminDashboard = () => {
             <p>Generate and view system reports</p>
             <div className="card-stats">
               <span>5 new reports</span>
-            </div>
-          </div>
-          <div className="card-arrow">→</div>
-        </Link>
-        
-        <Link to="/dashboard/security" className="dashboard-card">
-          <div className="card-icon">🔒</div>
-          <div className="card-content">
-            <h3>Security</h3>
-            <p>Monitor security and access logs</p>
-            <div className="card-stats">
-              <span>System secure</span>
             </div>
           </div>
           <div className="card-arrow">→</div>

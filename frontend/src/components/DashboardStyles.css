@@ -1,5 +1,21 @@
 /* Dashboard Styles - Responsive Design for All Screen Sizes */
 
+/* ===== ICON VISIBILITY FIXES ===== */
+.icon,
+.stat-icon,
+.card-icon,
+.activity-icon,
+.engagement-icon,
+.health-icon,
+.metric-icon {
+  opacity: 1 !important;
+  filter: none !important;
+  color: inherit !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1) !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
 /* Dashboard Container */
 .dashboard-container {
   min-height: 100vh;
@@ -73,9 +89,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  background: linear-gradient(135deg, #FF677D, #F8B400);
   border-radius: 12px;
   flex-shrink: 0;
+  color: white !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1) !important;
+  visibility: visible !important;
 }
 
 .stat-content h3 {
@@ -147,9 +168,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0ea5a4 0%, #0891b2 100%);
-  color: white;
+  background: linear-gradient(135deg, #FF677D, #F8B400);
+  color: white !important;
   border-radius: 12px;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1) !important;
+  visibility: visible !important;
   flex-shrink: 0;
   transition: transform 0.3s ease;
 }

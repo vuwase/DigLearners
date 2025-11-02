@@ -1,19 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../lib/language';
-import { getLessonsData } from '../../services/teacherMockDataService';
+import teacherApiService from '../../services/teacherApiService';
 import Icon from '../../components/icons/Icon';
 import '../../components/DashboardStyles.css';
 
 const Lessons = () => {
   const { t, currentLanguage } = useTranslation();
-  const data = getLessonsData();
-  const [selectedLesson, setSelectedLesson] = useState(data.lessons[0].id);
+  const [lessons, setLessons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedLesson, setSelectedLesson] = useState(null);
   const [filterSubject, setFilterSubject] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const currentLesson = data.lessons.find(lesson => lesson.id === selectedLesson);
-  
-  const filteredLessons = data.lessons.filter(lesson => {
+  useEffect(() => {
+    fetchLessons();
+  }, [filterSubject, filterStatus]);
+
+  const fetchLessons = async () => {
+    try {
+      setLoading(true);
+      const response = await teacherApiService.getLessons({
+        subject: filterSubject,
+        status: filterStatus
+      });
+      setLessons(response.lessons);
+      if (response.lessons.length > 0 && !selectedLesson) {
+        setSelectedLesson(response.lessons[0].id);
+      }
+    } catch (err) {
+      console.error('Error fetching lessons:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const currentLesson = lessons.find(lesson => lesson.id === selectedLesson);
+
+  const filteredLessons = lessons.filter(lesson => {
     const subjectMatch = filterSubject === 'all' || lesson.subject === filterSubject;
     const statusMatch = filterStatus === 'all' || lesson.status === filterStatus;
     return subjectMatch && statusMatch;
@@ -39,7 +64,36 @@ const Lessons = () => {
     }
   };
 
+  if (loading) {
     return (
+      <div className="dashboard-container">
+      <div className="page-container">
+          <div className="loading-screen">
+            <div className="loading-spinner"></div>
+          <p>Loading lessons...</p>
+        </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard-container">
+        <div className="page-container">
+          <div className="error-message">
+            <h2>Error loading lessons</h2>
+            <p>{error}</p>
+            <button onClick={fetchLessons} className="retry-btn">
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
     <div className="dashboard-container">
     <div className="page-container">
       <div className="page-header">
@@ -57,6 +111,56 @@ const Lessons = () => {
               }
             </p>
         </div>
+      </div>
+
+        {/* Quick Actions */}
+        <div className="quick-actions-section">
+          <div className="quick-actions-header">
+            <h3>
+              {currentLanguage === 'rw' ? 'Ikorwa Ryihuse' : 'Quick Actions'}
+            </h3>
+            <p>
+              {currentLanguage === 'rw' 
+                ? 'Tangiza amasomo mashya cyangwa genzura amasomo yose'
+                : 'Create new lessons or manage existing content'
+              }
+            </p>
+          </div>
+          <div className="quick-actions-buttons">
+            <button className="quick-action-btn primary">
+              <div className="action-icon">📚</div>
+              <div className="action-content">
+                <span className="action-title">
+                  {currentLanguage === 'rw' ? 'Tangiza Isomo' : 'Create Lesson'}
+                </span>
+                <span className="action-subtitle">
+                  {currentLanguage === 'rw' ? 'Tangiza isomo rishya' : 'Create new educational content'}
+                </span>
+              </div>
+            </button>
+            <button className="quick-action-btn secondary">
+              <div className="action-icon">🎯</div>
+              <div className="action-content">
+                <span className="action-title">
+                  {currentLanguage === 'rw' ? 'Gahunda' : 'Lesson Plan'}
+                </span>
+                <span className="action-subtitle">
+                  {currentLanguage === 'rw' ? 'Gena gahunda y\'isomo' : 'Create structured lesson plans'}
+                </span>
+              </div>
+            </button>
+            <button className="quick-action-btn secondary">
+              <div className="action-icon">📊</div>
+              <div className="action-content">
+                <span className="action-title">
+                  {currentLanguage === 'rw' ? 'Raporo' : 'Analytics'}
+                </span>
+                <span className="action-subtitle">
+                  {currentLanguage === 'rw' ? 'Reba imikurire y\'amasomo' : 'View lesson performance analytics'}
+                </span>
+        </div>
+        </button>
+          </div>
       </div>
 
         {/* Filters */}
@@ -213,7 +317,12 @@ const Lessons = () => {
                   {currentLanguage === 'rw' ? 'Intego' : 'Learning Objectives'}
                 </h3>
                 <ul>
-                  {currentLesson.objectives.map((objective, index) => (
+                  {(currentLesson.objectives ? 
+                    (typeof currentLesson.objectives === 'string' ? 
+                      JSON.parse(currentLesson.objectives) : 
+                      currentLesson.objectives) : 
+                    []
+                  ).map((objective, index) => (
                     <li key={index}>
                       <Icon name="target" size={16} style={{ marginRight: '8px' }} />
                       {objective}
@@ -227,7 +336,12 @@ const Lessons = () => {
                   {currentLanguage === 'rw' ? 'Ibikoresho' : 'Resources'}
                 </h3>
                 <ul>
-                  {currentLesson.resources.map((resource, index) => (
+                  {(currentLesson.resources ? 
+                    (typeof currentLesson.resources === 'string' ? 
+                      JSON.parse(currentLesson.resources) : 
+                      currentLesson.resources) : 
+                    []
+                  ).map((resource, index) => (
                     <li key={index}>
                       <Icon name="book" size={16} style={{ marginRight: '8px' }} />
                       {resource}
@@ -271,18 +385,22 @@ const Lessons = () => {
             {currentLanguage === 'rw' ? 'Ibyiciro' : 'Subject Categories'}
           </h3>
           <div className="categories-grid">
-            {data.categories.map((category, index) => (
-              <div key={index} className="category-card">
-                <div className="category-header">
-                  <h4>{category.name}</h4>
-                  <span className="category-count">{category.count} {currentLanguage === 'rw' ? 'amasomo' : 'lessons'}</span>
+            {subjects.filter(subject => subject !== 'all').map((subject, index) => {
+              const count = lessons.filter(lesson => lesson.subject === subject).length;
+              const colors = ['#FF677D', '#F8B400', '#4CAF50', '#2196F3', '#9C27B0'];
+              return (
+                <div key={index} className="category-card">
+                  <div className="category-header">
+                    <h4>{subject}</h4>
+                    <span className="category-count">{count} {currentLanguage === 'rw' ? 'amasomo' : 'lessons'}</span>
+                  </div>
+                  <div 
+                    className="category-color" 
+                    style={{ backgroundColor: colors[index % colors.length] }}
+                  ></div>
                 </div>
-                <div 
-                  className="category-color" 
-                  style={{ backgroundColor: category.color }}
-                ></div>
-            </div>
-          ))}
+              );
+            })}
           </div>
         </div>
 
@@ -297,7 +415,7 @@ const Lessons = () => {
                 <Icon name="book" size={24} />
               </div>
               <div className="stat-content">
-                <h3>{data.summary.totalLessons}</h3>
+                <h3>{lessons.length}</h3>
                 <p>
                   {currentLanguage === 'rw' ? 'Amasomo Byose' : 'Total Lessons'}
                 </p>
@@ -308,7 +426,7 @@ const Lessons = () => {
                 <Icon name="check" size={24} />
               </div>
               <div className="stat-content">
-                <h3>{data.summary.publishedLessons}</h3>
+                <h3>{lessons.filter(lesson => lesson.status === 'published').length}</h3>
                 <p>
                   {currentLanguage === 'rw' ? 'Yasohowe' : 'Published'}
                 </p>
@@ -319,7 +437,7 @@ const Lessons = () => {
                 <Icon name="assignment" size={24} />
               </div>
               <div className="stat-content">
-                <h3>{data.summary.draftLessons}</h3>
+                <h3>{lessons.filter(lesson => lesson.status === 'draft').length}</h3>
                 <p>
                   {currentLanguage === 'rw' ? 'Ntibyasohowe' : 'Draft'}
                 </p>
@@ -330,7 +448,7 @@ const Lessons = () => {
                 <Icon name="analytics" size={24} />
               </div>
               <div className="stat-content">
-                <h3>{data.summary.averageCompletion}%</h3>
+                <h3>{Math.round(lessons.reduce((sum, lesson) => sum + (lesson.averageScore || 0), 0) / lessons.length) || 0}%</h3>
                 <p>
                   {currentLanguage === 'rw' ? 'Imikurire Ryose' : 'Average Completion'}
                 </p>

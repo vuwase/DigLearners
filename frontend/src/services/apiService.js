@@ -1,7 +1,7 @@
 // API Service - Centralized API calls
 import axios from 'axios'
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api'
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api'
 
 // Create axios instance
 const api = axios.create({
@@ -37,6 +37,28 @@ api.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+// Health check
+export const healthCheck = async () => {
+  try {
+    const response = await api.get('/health')
+    return response.data
+  } catch (error) {
+    throw new Error('Backend connection failed')
+  }
+}
+
+// Test endpoint
+export const testConnection = async () => {
+  try {
+    const response = await api.get('/test')
+    return response.data
+  } catch (error) {
+    throw new Error('Backend test failed')
+  }
+}
+
+export default api
 
 export const apiService = {
   // Content Management API

@@ -1,14 +1,95 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../lib/language';
 import Icon from '../../components/icons/Icon';
-import adminMockDataService from '../../services/adminMockDataService';
+import adminApiService from '../../services/adminApiService';
 import './AdminPages.css';
 
 const Settings = () => {
   const { t } = useTranslation();
-  const [settings, setSettings] = useState(adminMockDataService.getSettings());
+  const [settings, setSettings] = useState({
+    system: {
+      siteName: 'DigLearners',
+      siteDescription: 'Digital Learning Platform',
+      maintenanceMode: false,
+      registrationEnabled: true
+    },
+    security: {
+      passwordMinLength: 8,
+      sessionTimeout: 30,
+      twoFactorAuth: false,
+      loginAttempts: 5
+    },
+    notifications: {
+      emailNotifications: true,
+      pushNotifications: true,
+      weeklyReports: true,
+      systemAlerts: true
+    },
+    userSettings: {
+      defaultRole: 'learner',
+      maxUsersPerClass: 30,
+      requireEmailVerification: false,
+      allowSelfRegistration: true
+    },
+    contentSettings: {
+      maxLessonDuration: 60,
+      autoApproveLessons: false,
+      allowUserGeneratedContent: true,
+      contentModeration: true
+    },
+    notificationSettings: {
+      emailNotifications: true,
+      pushNotifications: true,
+      weeklyDigest: false,
+      achievementNotifications: true
+    },
+    appearance: {
+      theme: 'light',
+      primaryColor: '#FF677D',
+      logoUrl: '',
+      faviconUrl: ''
+    }
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('system');
   const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      setLoading(true);
+      const response = await adminApiService.getSettings();
+      if (response.data) {
+        // Merge API response with default settings to ensure all fields exist
+        setSettings(prev => ({
+          ...prev,
+          ...response.data,
+          userSettings: {
+            ...prev.userSettings,
+            ...(response.data.userSettings || {})
+          },
+          contentSettings: {
+            ...prev.contentSettings,
+            ...(response.data.contentSettings || {})
+          },
+          notificationSettings: {
+            ...prev.notificationSettings,
+            ...(response.data.notificationSettings || {})
+          }
+        }));
+      }
+    } catch (err) {
+      console.error('Error fetching settings:', err);
+      setError(err.message);
+      // Use default settings as fallback
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSettingChange = (category, key, value) => {
     setSettings(prev => ({
@@ -21,15 +102,20 @@ const Settings = () => {
     setHasChanges(true);
   };
 
-  const handleSave = () => {
-    // Here you would typically save to backend
-    console.log('Saving settings:', settings);
-    setHasChanges(false);
-    // Show success message
+  const handleSave = async () => {
+    try {
+      await adminApiService.updateSettings(settings);
+      setHasChanges(false);
+      // Show success message
+      console.log('Settings saved successfully');
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      setError(err.message);
+    }
   };
 
   const handleReset = () => {
-    setSettings(adminMockDataService.getSettings());
+    fetchSettings();
     setHasChanges(false);
   };
 
@@ -39,6 +125,33 @@ const Settings = () => {
     { id: 'content', label: 'Content', icon: 'book' },
     { id: 'notifications', label: 'Notifications', icon: 'message' }
   ];
+
+  if (loading) {
+    return (
+      <div className="admin-page">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <h2>Loading Settings...</h2>
+          <p>Fetching system settings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-page">
+        <div className="error-container">
+          <div className="error-icon">⚠️</div>
+          <h2>Error Loading Settings</h2>
+          <p>{error}</p>
+          <button onClick={fetchSettings} className="retry-button">
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-page">
@@ -70,16 +183,16 @@ const Settings = () => {
               <label>Site Name</label>
               <input
                 type="text"
-                value={settings.systemSettings.siteName}
-                onChange={(e) => handleSettingChange('systemSettings', 'siteName', e.target.value)}
+                value={settings.system.siteName}
+                onChange={(e) => handleSettingChange('system', 'siteName', e.target.value)}
               />
             </div>
             
             <div className="setting-item">
               <label>Site Description</label>
               <textarea
-                value={settings.systemSettings.siteDescription}
-                onChange={(e) => handleSettingChange('systemSettings', 'siteDescription', e.target.value)}
+                value={settings.system.siteDescription}
+                onChange={(e) => handleSettingChange('system', 'siteDescription', e.target.value)}
                 rows={3}
               />
             </div>
@@ -88,8 +201,8 @@ const Settings = () => {
               <label>
                 <input
                   type="checkbox"
-                  checked={settings.systemSettings.maintenanceMode}
-                  onChange={(e) => handleSettingChange('systemSettings', 'maintenanceMode', e.target.checked)}
+                  checked={settings.system.maintenanceMode}
+                  onChange={(e) => handleSettingChange('system', 'maintenanceMode', e.target.checked)}
                 />
                 <span className="checkmark"></span>
                 Maintenance Mode
@@ -103,8 +216,8 @@ const Settings = () => {
               <label>
                 <input
                   type="checkbox"
-                  checked={settings.systemSettings.registrationEnabled}
-                  onChange={(e) => handleSettingChange('systemSettings', 'registrationEnabled', e.target.checked)}
+                  checked={settings.system.registrationEnabled}
+                  onChange={(e) => handleSettingChange('system', 'registrationEnabled', e.target.checked)}
                 />
                 <span className="checkmark"></span>
                 Allow User Registration
@@ -118,8 +231,8 @@ const Settings = () => {
               <label>
                 <input
                   type="checkbox"
-                  checked={settings.systemSettings.emailNotifications}
-                  onChange={(e) => handleSettingChange('systemSettings', 'emailNotifications', e.target.checked)}
+                  checked={settings.notifications.emailNotifications}
+                  onChange={(e) => handleSettingChange('notifications', 'emailNotifications', e.target.checked)}
                 />
                 <span className="checkmark"></span>
                 Email Notifications

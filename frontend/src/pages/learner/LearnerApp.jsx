@@ -2,13 +2,14 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import AppLayout from '../../components/layout/AppLayout'
+import LearnerLayout from '../../components/layout/LearnerLayout'
 import LearnerDashboard from './LearnerDashboard'
-import MyLessons from './MyLessons'
-import Assignments from './Assignments'
-import Leaderboard from './Leaderboard'
 import Achievements from './Achievements'
-import Progress from './Progress'
+import Lessons from './Lessons'
+import AgeGroupSelector from '../../components/AgeGroupSelector'
+import GamesDashboard from './GamesDashboard'
+import GamePlayer from './GamePlayer'
+import LessonPlayer from '../LessonPlayer'
 
 const LearnerApp = () => {
   const { user, logout } = useAuth()
@@ -18,17 +19,18 @@ const LearnerApp = () => {
   }
 
   return (
-    <AppLayout user={user} onLogout={logout}>
+    <LearnerLayout>
       <Routes>
         <Route path="/" element={<LearnerDashboard />} />
-        <Route path="/lessons" element={<MyLessons />} />
-        <Route path="/progress" element={<Progress />} />
-        <Route path="/assignments" element={<Assignments />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/age-select" element={<AgeGroupSelector />} />
+        <Route path="/games" element={<GamesDashboard />} />
+        <Route path="/lessons" element={<Lessons />} />
+        <Route path="/lesson/:id" element={<LessonPlayer />} />
+        <Route path="/game/:gameId" element={<GamePlayer />} />
         <Route path="/achievements" element={<Achievements />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
-    </AppLayout>
+    </LearnerLayout>
   )
 }
 
