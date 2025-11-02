@@ -1,6 +1,6 @@
-# DigLearners Platform - Implementation Complete! 🎉
+# DigLearners Platform - Implementation Complete!
 
-## ✅ What Has Been Completed
+## What Has Been Completed
 
 ### 1. **Database Setup** ✓
 - **Sequelize ORM** configured with SQLite
@@ -24,7 +24,7 @@
 ### 2. **Backend API** ✓
 - **Authentication System:**
   - JWT-based authentication
-  - Role-based access control (Admin, Teacher, Learner, Parent)
+- Role-based access control (Teacher, Learner, Parent; Admins use Teacher UI)
   - Password hashing and validation
   - Token verification middleware
   - Rate limiting
@@ -48,9 +48,8 @@
 
 - **Role-Based Dashboards:**
   - **Learner Dashboard** - Progress, lessons, badges
-  - **Teacher Dashboard** - Class management, analytics
+  - **Teacher Dashboard** - Class management, analytics, and admin capabilities for admin users
   - **Parent Dashboard** - Child progress monitoring
-  - **Admin Dashboard** - Platform management
 
 - **Context Providers:**
   - `AuthContext` - User authentication state
@@ -77,8 +76,7 @@
 
 ### 5. **Sample Data** ✓
 - **Default Users:**
-  - Admin: `admin@diglearners.rw` / `admin123`
-  - Teacher: `teacher@diglearners.rw` / `teacher123`
+  - Teacher/Admin: `teacher@diglearners.rw` / `teacher123`
 
 - **Sample Lessons:**
   - Introduction to Typing
@@ -93,7 +91,7 @@
   - 7-Day Streak
   - Perfect Score (100%)
 
-## 🚀 How to Run the Project
+## How to Run the Project
 
 ### Prerequisites
 - Node.js >= 16.0.0
@@ -145,7 +143,7 @@ npm run dev
 When you first run the backend, it will automatically:
 1. Create the SQLite database (`data/diglearners.db`)
 2. Create all necessary tables
-3. Seed initial data (admin user, teacher, sample lessons, badges)
+3. Seed initial data (teacher, sample lessons, badges)
 
 ## 🎯 Testing the Application
 
@@ -153,8 +151,8 @@ When you first run the backend, it will automatically:
 
 The backend should start with output showing:
 ```
-✅ Database initialized successfully
-🚀 DigLearners Backend running on http://localhost:3001
+Database initialized successfully
+DigLearners Backend running on http://localhost:3001
 ```
 
 Test endpoints:
@@ -169,10 +167,8 @@ Test endpoints:
 
 ### 3. Test Authentication
 
-**Login as Admin:**
-- Email: `admin@diglearners.rw`
-- Password: `admin123`
-- Should redirect to Admin Dashboard
+**Admins:**
+- Admin users log in via the Teacher login and access elevated features within the Teacher dashboard.
 
 **Login as Teacher:**
 - Email: `teacher@diglearners.rw`
@@ -227,7 +223,7 @@ DigLearners/
 │   │   │   ├── learner/     # Learner dashboard
 │   │   │   ├── teacher/     # Teacher dashboard
 │   │   │   ├── parent/      # Parent dashboard
-│   │   │   ├── admin/       # Admin dashboard
+│   │   │   ├── admin/       # Deprecated: Admin UI merged into Teacher UI
 │   │   │   └── public/      # Home, NotFound
 │   │   ├── services/        # API services
 │   │   │   ├── authService.js
@@ -245,32 +241,32 @@ DigLearners/
 ## 🔑 Key Features Implemented
 
 ### Backend
-- ✅ RESTful API architecture
-- ✅ JWT authentication & authorization
-- ✅ Role-based access control
-- ✅ Sequelize ORM with SQLite
-- ✅ Password hashing (bcrypt)
-- ✅ Input validation
-- ✅ Error handling
-- ✅ Request logging
-- ✅ CORS configuration
-- ✅ Database seeding
+- RESTful API architecture
+- JWT authentication & authorization
+- Role-based access control
+- Sequelize ORM with SQLite
+- Password hashing (bcrypt)
+- Input validation
+- Error handling
+- Request logging
+- CORS configuration
+- Database seeding
 
 ### Frontend
-- ✅ React 18 with hooks
-- ✅ React Router for navigation
-- ✅ Protected routes
-- ✅ Authentication flow
-- ✅ Role-based dashboards
-- ✅ Context API for state management
-- ✅ Responsive design
-- ✅ Multilingual support (EN/RW)
-- ✅ Dark mode support
-- ✅ Accessibility features
-- ✅ Service worker (PWA)
-- ✅ Offline-first architecture
+- React 18 with hooks
+- React Router for navigation
+- Protected routes
+- Authentication flow
+- Role-based dashboards
+- Context API for state management
+- Responsive design
+- Multilingual support (EN/RW)
+- Dark mode support
+- Accessibility features
+- Service worker (PWA)
+- Offline-first architecture
 
-## 📝 API Documentation
+## API Documentation
 
 ### Authentication Endpoints
 
@@ -337,7 +333,7 @@ DigLearners/
 - **Dark Mode:** Eye-friendly for low-light environments
 - **Smooth Animations:** Engaging user experience
 
-## 🔐 Security Features
+## Security Features
 
 - JWT token authentication
 - Password hashing with bcrypt (12 rounds)
@@ -349,7 +345,7 @@ DigLearners/
 - CORS configuration
 - Rate limiting
 
-## 🌍 Multilingual Support
+## Multilingual Support
 
 The platform supports:
 - **English (en)** - Primary language
@@ -357,7 +353,7 @@ The platform supports:
 
 All UI elements, error messages, and content are translated.
 
-## 📊 Database Schema
+## Database Schema
 
 ### Tables
 1. **users** - User accounts and authentication
@@ -377,7 +373,7 @@ All UI elements, error messages, and content are translated.
 - User ↔ LearningClass (Many-to-Many via UserLearningClass)
 - LearningClass ↔ Lesson (Many-to-Many via ClassLesson)
 
-## 🎮 Gamification System
+## Gamification System
 
 ### Levels
 1. **Explorer** (0-99 points)
@@ -414,7 +410,7 @@ All UI elements, error messages, and content are translated.
 9. **Advanced Gamification** - Streaks, challenges, tournaments
 10. **Mobile Apps** - Native iOS/Android apps
 
-## 📚 Dependencies
+## Dependencies
 
 ### Backend
 - `express` - Web framework
@@ -453,7 +449,7 @@ To add new features:
 - README.md has project overview
 - Each model has inline documentation
 
-## 🎓 Educational Impact
+## Educational Impact
 
 This platform is designed to:
 - Enhance digital literacy in Rwandan primary schools
@@ -463,21 +459,21 @@ This platform is designed to:
 - Enable parents to monitor progress
 - Generate data for educational research
 
-## 🏆 Project Status
+## Project Status
 
-**Status: Production Ready! 🚀**
+**Status: Production Ready!**
 
 All core features are implemented and working:
-- ✅ Database and models
-- ✅ Authentication system
-- ✅ API endpoints
-- ✅ Frontend UI
-- ✅ Role-based dashboards
-- ✅ Multilingual support
-- ✅ PWA functionality
-- ✅ Sample data
+- Database and models
+- Authentication system
+- API endpoints
+- Frontend UI
+- Role-based dashboards
+- Multilingual support
+- PWA functionality
+- Sample data
 
-## 💡 Quick Start Commands
+## Quick Start Commands
 
 ```bash
 # Install everything
@@ -499,7 +495,7 @@ cd frontend && npm run build
 cd backend && npm start
 ```
 
-## 🎉 Congratulations!
+## Congratulations!
 
 You now have a fully functional, production-ready digital literacy platform! The system includes:
 - Complete authentication and authorization
@@ -511,7 +507,7 @@ You now have a fully functional, production-ready digital literacy platform! The
 - Gamification system
 - Sample data to start testing immediately
 
-**Happy Learning! 📚✨**
+**Happy Learning!**
 
 ---
 
