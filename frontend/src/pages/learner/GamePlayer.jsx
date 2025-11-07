@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useSound } from '../../lib/soundEffects';
+import learnerApiService from '../../services/learnerApiService';
 import './GamePlayer.css';
 
 const GamePlayer = () => {
@@ -8,6 +11,7 @@ const GamePlayer = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { playNextButton, playClick } = useSound();
   
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +38,7 @@ const GamePlayer = () => {
     setTimeStarted(Date.now());
   };
 
-  const completeGame = (finalScore = 100) => {
+  const completeGame = async (finalScore = 100) => {
     const timeSpent = timeStarted ? Math.round((Date.now() - timeStarted) / 1000) : 0;
     setScore(finalScore);
     setGameState('completed');
@@ -52,6 +56,70 @@ const GamePlayer = () => {
     const existingProgress = JSON.parse(localStorage.getItem('gameProgress') || '[]');
     existingProgress.push(gameProgress);
     localStorage.setItem('gameProgress', JSON.stringify(existingProgress));
+    
+    // Send to backend API to award badges and update points
+    try {
+      console.log('[GamePlayer] Saving game completion to backend...');
+      console.log('[GamePlayer] Game ID:', game.id);
+      console.log('[GamePlayer] Score:', finalScore);
+      console.log('[GamePlayer] Points reward:', game.pointsReward || 10);
+      
+      // Try using the learner progress endpoint first
+      try {
+        const progressData = {
+          lessonId: game.id || `game-${game.id}`,
+          score: finalScore,
+          timeSpent: timeSpent,
+          isCompleted: true,
+          progressPercentage: 100
+        };
+        
+        console.log('[GamePlayer] Sending progress data:', progressData);
+        const response = await learnerApiService.updateProgress(game.id || `game-${game.id}`, progressData);
+        console.log('[GamePlayer] Progress update response:', response);
+        
+        // Check if badges were awarded
+        if (response?.newBadges && response.newBadges.length > 0) {
+          console.log('🎉 Badges awarded:', response.newBadges);
+          localStorage.setItem('newBadges', JSON.stringify(response.newBadges));
+          localStorage.setItem('refreshAchievements', 'true');
+        }
+        
+        // Also check data.newBadges
+        if (response?.data?.newBadges && response.data.newBadges.length > 0) {
+          console.log('🎉 Badges in data.newBadges:', response.data.newBadges);
+          localStorage.setItem('newBadges', JSON.stringify(response.data.newBadges));
+          localStorage.setItem('refreshAchievements', 'true');
+        }
+        
+        // Update user points if returned
+        if (response?.data?.progress) {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          if (response.data.progress.totalPoints) {
+            user.totalPoints = response.data.progress.totalPoints;
+            localStorage.setItem('user', JSON.stringify(user));
+          }
+        }
+        
+      } catch (progressError) {
+        console.warn('[GamePlayer] Progress update failed:', progressError);
+        // Try alternative: directly update user points
+        try {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          const currentPoints = user.totalPoints || 0;
+          const pointsToAdd = game.pointsReward || 10;
+          user.totalPoints = currentPoints + pointsToAdd;
+          localStorage.setItem('user', JSON.stringify(user));
+          console.log('[GamePlayer] Updated user points locally:', user.totalPoints);
+        } catch (pointError) {
+          console.warn('[GamePlayer] Could not update points:', pointError);
+        }
+      }
+      
+    } catch (error) {
+      console.error('[GamePlayer] Error saving game progress:', error);
+      console.error('[GamePlayer] Error stack:', error.stack);
+    }
   };
 
   const handleBackToDashboard = () => {
@@ -241,67 +309,140 @@ const getGameTypeIcon = (gameType) => {
 
 // Enhanced game components for different game types and grades
 const PuzzleGame = ({ game, onComplete, onProgress }) => {
+  const { t, language } = useLanguage();
   const [currentPuzzle, setCurrentPuzzle] = useState(0);
   const [solved, setSolved] = useState(false);
 
-  // Generate age-appropriate puzzles based on game content and grade
-  const generatePuzzles = () => {
+  // Generate age-appropriate puzzles based on game content and grade - using translations
+  // Recreate when language changes
+  const generatePuzzles = React.useCallback(() => {
     const grade = game.grade;
+    const gradeNum = parseInt(grade?.toString().replace('Grade ', '') || '0') || 0;
     
-    if (grade === 'Grade 1') {
+    // Grades 1-3: Easy puzzles
+    if (gradeNum >= 1 && gradeNum <= 3) {
       return [
-        { question: "What shape is this? ⭕", answer: "Circle", options: ["Circle", "Square", "Triangle", "Rectangle"] },
-        { question: "What color is this? 🔴", answer: "Red", options: ["Red", "Blue", "Green", "Yellow"] },
-        { question: "Count the stars: ⭐⭐⭐", answer: "3", options: ["1", "2", "3", "4"] }
+        { 
+          question: t('puzzle.grade1.q1.question'), 
+          answer: t('puzzle.grade1.q1.answer'), 
+          options: [
+            t('puzzle.grade1.q1.option1'), 
+            t('puzzle.grade1.q1.option2'), 
+            t('puzzle.grade1.q1.option3'), 
+            t('puzzle.grade1.q1.option4')
+          ] 
+        },
+        { 
+          question: t('puzzle.grade1.q2.question'), 
+          answer: t('puzzle.grade1.q2.answer'), 
+          options: [
+            t('puzzle.grade1.q2.option1'), 
+            t('puzzle.grade1.q2.option2'), 
+            t('puzzle.grade1.q2.option3'), 
+            t('puzzle.grade1.q2.option4')
+          ] 
+        },
+        { 
+          question: t('puzzle.grade1.q3.question'), 
+          answer: t('puzzle.grade1.q3.answer'), 
+          options: [
+            t('puzzle.grade1.q3.option1'), 
+            t('puzzle.grade1.q3.option2'), 
+            t('puzzle.grade1.q3.option3'), 
+            t('puzzle.grade1.q3.option4')
+          ] 
+        }
       ];
-    } else if (grade === 'Grade 2') {
+    } 
+    // Grades 4-6: Harder puzzles
+    else if (gradeNum >= 4 && gradeNum <= 6) {
       return [
-        { question: "What comes next? 🐶 🐱 🐶 ?", answer: "🐱", options: ["🐶", "🐱", "🐭", "🐹"] },
-        { question: "Which is different?", answer: "🔺", options: ["🔴", "🔴", "🔺", "🔴"] },
-        { question: "Complete: A, B, C, ?", answer: "D", options: ["D", "E", "F", "G"] }
-      ];
-    } else if (grade === 'Grade 3') {
-      return [
-        { question: "2 × 3 = ?", answer: "6", options: ["5", "6", "7", "8"] },
-        { question: "Which word rhymes with 'cat'?", answer: "hat", options: ["dog", "hat", "car", "sun"] },
-        { question: "What's the missing number? 2, 4, 6, ?", answer: "8", options: ["7", "8", "9", "10"] }
-      ];
-    } else if (grade === 'Grade 4') {
-      return [
-        { question: "What is 1/2 of 8?", answer: "4", options: ["2", "3", "4", "5"] },
-        { question: "Which is a noun?", answer: "book", options: ["run", "happy", "book", "quickly"] },
-        { question: "12 ÷ 3 = ?", answer: "4", options: ["3", "4", "5", "6"] }
-      ];
-    } else if (grade === 'Grade 5') {
-      return [
-        { question: "What is 0.5 + 0.3?", answer: "0.8", options: ["0.7", "0.8", "0.9", "1.0"] },
-        { question: "Which is the main idea?", answer: "The story is about friendship", options: ["The boy was tall", "The story is about friendship", "It was sunny", "They ate lunch"] },
-        { question: "15 × 4 = ?", answer: "60", options: ["50", "55", "60", "65"] }
-      ];
-    } else {
-      return [
-        { question: "Solve: x + 5 = 12", answer: "x = 7", options: ["x = 6", "x = 7", "x = 8", "x = 9"] },
-        { question: "Which is a metaphor?", answer: "Time is money", options: ["The cat ran", "Time is money", "She is tall", "I like pizza"] },
-        { question: "What is 25% of 80?", answer: "20", options: ["15", "20", "25", "30"] }
+        { 
+          question: t('puzzle.grade4.q1.question'), 
+          answer: t('puzzle.grade4.q1.answer'), 
+          options: [
+            t('puzzle.grade4.q1.option1'), 
+            t('puzzle.grade4.q1.option2'), 
+            t('puzzle.grade4.q1.option3'), 
+            t('puzzle.grade4.q1.option4')
+          ] 
+        },
+        { 
+          question: t('puzzle.grade4.q2.question'), 
+          answer: t('puzzle.grade4.q2.answer'), 
+          options: [
+            t('puzzle.grade4.q2.option1'), 
+            t('puzzle.grade4.q2.option2'), 
+            t('puzzle.grade4.q2.option3'), 
+            t('puzzle.grade4.q2.option4')
+          ] 
+        },
+        { 
+          question: t('puzzle.grade4.q3.question'), 
+          answer: t('puzzle.grade4.q3.answer'), 
+          options: [
+            t('puzzle.grade4.q3.option1'), 
+            t('puzzle.grade4.q3.option2'), 
+            t('puzzle.grade4.q3.option3'), 
+            t('puzzle.grade4.q3.option4')
+          ] 
+        }
       ];
     }
-  };
+    // Default: Easy puzzles
+      return [
+      { 
+        question: t('puzzle.grade1.q1.question'), 
+        answer: t('puzzle.grade1.q1.answer'), 
+        options: [
+          t('puzzle.grade1.q1.option1'), 
+          t('puzzle.grade1.q1.option2'), 
+          t('puzzle.grade1.q1.option3'), 
+          t('puzzle.grade1.q1.option4')
+        ] 
+      },
+      { 
+        question: t('puzzle.grade1.q2.question'), 
+        answer: t('puzzle.grade1.q2.answer'), 
+        options: [
+          t('puzzle.grade1.q2.option1'), 
+          t('puzzle.grade1.q2.option2'), 
+          t('puzzle.grade1.q2.option3'), 
+          t('puzzle.grade1.q2.option4')
+        ] 
+      },
+      { 
+        question: t('puzzle.grade1.q3.question'), 
+        answer: t('puzzle.grade1.q3.answer'), 
+        options: [
+          t('puzzle.grade1.q3.option1'), 
+          t('puzzle.grade1.q3.option2'), 
+          t('puzzle.grade1.q3.option3'), 
+          t('puzzle.grade1.q3.option4')
+        ] 
+      }
+    ];
+  }, [t, language, game.grade]); // Recreate when language or grade changes
 
-  const puzzles = generatePuzzles();
+  const puzzles = React.useMemo(() => generatePuzzles(), [generatePuzzles]);
 
   const handleAnswer = (answer) => {
     if (answer === puzzles[currentPuzzle].answer) {
       setSolved(true);
-      onProgress(((currentPuzzle + 1) / puzzles.length) * 100);
+      const nextPuzzle = currentPuzzle + 1;
+      onProgress((nextPuzzle / puzzles.length) * 100);
       
       setTimeout(() => {
-        if (currentPuzzle < puzzles.length - 1) {
-          setCurrentPuzzle(currentPuzzle + 1);
+        if (nextPuzzle < puzzles.length) {
+          setCurrentPuzzle(nextPuzzle);
           setSolved(false);
         } else {
           onComplete(100);
         }
       }, 1500);
+    } else {
+      // Wrong answer - show error and let them try again
+      setSolved(false);
     }
   };
 
@@ -314,7 +455,7 @@ const PuzzleGame = ({ game, onComplete, onProgress }) => {
       {solved ? (
         <div className="correct-answer">
           <div className="success-icon">✅</div>
-          <p>Correct! Well done!</p>
+          <p>{t('puzzle.feedback.correct')}</p>
         </div>
       ) : (
         <div className="puzzle-options">
@@ -331,195 +472,357 @@ const PuzzleGame = ({ game, onComplete, onProgress }) => {
       )}
       
       <div className="puzzle-progress">
-        Puzzle {currentPuzzle + 1} of {puzzles.length}
+        {t('puzzle.progress', { current: currentPuzzle + 1, total: puzzles.length })}
       </div>
     </div>
   );
 };
 
 const QuizGame = ({ game, onComplete, onProgress }) => {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const { playClick, playBlockSelect, playSuccess, playError } = useSound();
+  const { t, language } = useLanguage();
+  const [currentChallenge, setCurrentChallenge] = useState(0);
+  const [selectedBlocks, setSelectedBlocks] = useState([]);
+  const [isCorrect, setIsCorrect] = useState(null);
+  const [showHint, setShowHint] = useState(false);
+  const [catPosition, setCatPosition] = useState({ x: 0, y: 4 }); // Start at bottom left (row 4, col 0)
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [showGameBoard, setShowGameBoard] = useState(true); // Show board from start
   const [score, setScore] = useState(0);
-  const [answered, setAnswered] = useState(false);
 
-  // Generate grade-appropriate quiz questions
-  const generateQuestions = () => {
-    const grade = game.grade;
-    const subject = game.subject;
-    
-    if (grade === 'Grade 1') {
-      if (subject === 'Math') {
-        return [
-          { question: "How many fingers do you have?", answer: "10", options: ["8", "9", "10", "11"] },
-          { question: "What comes after 5?", answer: "6", options: ["4", "5", "6", "7"] },
-          { question: "Which is bigger: 3 or 7?", answer: "7", options: ["3", "7", "Same", "Don't know"] }
-        ];
-      } else if (subject === 'Digital Literacy') {
-        return [
-          { question: "What do you use to click on a computer?", answer: "Mouse", options: ["Keyboard", "Mouse", "Screen", "Speaker"] },
-          { question: "Where do you see pictures on a computer?", answer: "Screen", options: ["Keyboard", "Mouse", "Screen", "Speaker"] },
-          { question: "What makes sounds on a computer?", answer: "Speaker", options: ["Keyboard", "Mouse", "Screen", "Speaker"] }
-        ];
-      }
-    } else if (grade === 'Grade 2') {
-      if (subject === 'Math') {
-        return [
-          { question: "What is 5 + 3?", answer: "8", options: ["6", "7", "8", "9"] },
-          { question: "What is 10 - 4?", answer: "6", options: ["5", "6", "7", "8"] },
-          { question: "How many sides does a triangle have?", answer: "3", options: ["2", "3", "4", "5"] }
-        ];
-      } else if (subject === 'Language') {
-        return [
-          { question: "Which letter comes after B?", answer: "C", options: ["A", "C", "D", "E"] },
-          { question: "What sound does 'M' make?", answer: "mmm", options: ["aaa", "mmm", "sss", "rrr"] },
-          { question: "Which word starts with 'S'?", answer: "Sun", options: ["Cat", "Dog", "Sun", "Ball"] }
-        ];
-      }
-    } else if (grade === 'Grade 3') {
-      if (subject === 'Math') {
-        return [
-          { question: "What is 4 × 3?", answer: "12", options: ["10", "11", "12", "13"] },
-          { question: "What is 15 ÷ 3?", answer: "5", options: ["4", "5", "6", "7"] },
-          { question: "Which number is even?", answer: "8", options: ["7", "8", "9", "11"] }
-        ];
-      } else if (subject === 'Science') {
-        return [
-          { question: "What do plants need to grow?", answer: "Water and sunlight", options: ["Only water", "Water and sunlight", "Only soil", "Only air"] },
-          { question: "Which animal is a mammal?", answer: "Dog", options: ["Fish", "Bird", "Dog", "Butterfly"] },
-          { question: "What happens to water when it gets very cold?", answer: "It becomes ice", options: ["It disappears", "It becomes ice", "It becomes hot", "Nothing"] }
-        ];
-      }
-    } else if (grade === 'Grade 4') {
-      if (subject === 'Math') {
-        return [
-          { question: "What is 1/4 + 1/4?", answer: "1/2", options: ["1/8", "1/4", "1/2", "1"] },
-          { question: "What is 25 × 4?", answer: "100", options: ["90", "95", "100", "105"] },
-          { question: "How many minutes are in 2 hours?", answer: "120", options: ["100", "110", "120", "130"] }
-        ];
-      } else if (subject === 'Social Studies') {
-        return [
-          { question: "What is the capital of Rwanda?", answer: "Kigali", options: ["Butare", "Kigali", "Gisenyi", "Ruhengeri"] },
-          { question: "Which continent is Rwanda in?", answer: "Africa", options: ["Asia", "Europe", "Africa", "America"] },
-          { question: "What language do most Rwandans speak?", answer: "Kinyarwanda", options: ["English", "French", "Kinyarwanda", "Swahili"] }
-        ];
-      }
-    } else if (grade === 'Grade 5') {
-      if (subject === 'Math') {
-        return [
-          { question: "What is 0.25 + 0.75?", answer: "1.0", options: ["0.9", "1.0", "1.1", "1.2"] },
-          { question: "What is 20% of 50?", answer: "10", options: ["8", "9", "10", "11"] },
-          { question: "What is the area of a rectangle 5×3?", answer: "15", options: ["12", "13", "15", "18"] }
-        ];
-      } else if (subject === 'Science') {
-        return [
-          { question: "What is the process plants use to make food?", answer: "Photosynthesis", options: ["Respiration", "Photosynthesis", "Digestion", "Circulation"] },
-          { question: "Which planet is closest to the sun?", answer: "Mercury", options: ["Venus", "Earth", "Mercury", "Mars"] },
-          { question: "What gas do we breathe in?", answer: "Oxygen", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"] }
-        ];
-      }
-    } else if (grade === 'Grade 6') {
-      if (subject === 'Math') {
-        return [
-          { question: "If x + 7 = 15, what is x?", answer: "8", options: ["6", "7", "8", "9"] },
-          { question: "What is 3² + 4²?", answer: "25", options: ["23", "24", "25", "26"] },
-          { question: "What is 60% of 80?", answer: "48", options: ["46", "47", "48", "49"] }
-        ];
-      } else if (subject === 'Digital Literacy') {
-        return [
-          { question: "What does HTML stand for?", answer: "HyperText Markup Language", options: ["High Tech Modern Language", "HyperText Markup Language", "Home Tool Markup Language", "Hard Text Making Language"] },
-          { question: "Which is a safe way to create passwords?", answer: "Use letters, numbers, and symbols", options: ["Use your name only", "Use 123456", "Use letters, numbers, and symbols", "Use your birthday"] },
-          { question: "What should you do if someone online asks for personal information?", answer: "Tell a trusted adult", options: ["Give them the information", "Tell a trusted adult", "Ignore them", "Ask for their information too"] }
-        ];
-      }
+  // Fun cat movement challenges - using translations (recreated when language changes)
+  const challenges = React.useMemo(() => [
+    {
+      id: 1,
+      title: t('game.cat.challenge1.title'),
+      description: t('game.cat.challenge1.description'),
+      target: { x: 2, y: 2 }, // Column 2, Row 2
+      blocks: [
+        { id: 'move_forward', text: t('game.cat.block.forward'), icon: '⬆️', color: '#4CAF50' },
+        { id: 'move_backward', text: t('game.cat.block.backward'), icon: '⬇️', color: '#f44336' },
+        { id: 'move_left', text: t('game.cat.block.left'), icon: '⬅️', color: '#2196F3' },
+        { id: 'move_right', text: t('game.cat.block.right'), icon: '➡️', color: '#FF9800' }
+      ],
+      solution: ['move_right', 'move_right', 'move_forward', 'move_forward'],
+      hint: t('game.cat.challenge1.hint')
+    },
+    {
+      id: 2,
+      title: t('game.cat.challenge2.title'),
+      description: t('game.cat.challenge2.description'),
+      target: { x: 3, y: 1 },
+      blocks: [
+        { id: 'move_forward', text: t('game.cat.block.forward'), icon: '⬆️', color: '#4CAF50' },
+        { id: 'move_backward', text: t('game.cat.block.backward'), icon: '⬇️', color: '#f44336' },
+        { id: 'move_left', text: t('game.cat.block.left'), icon: '⬅️', color: '#2196F3' },
+        { id: 'move_right', text: t('game.cat.block.right'), icon: '➡️', color: '#FF9800' }
+      ],
+      solution: ['move_right', 'move_right', 'move_right', 'move_forward'],
+      hint: t('game.cat.challenge2.hint')
+    },
+    {
+      id: 3,
+      title: t('game.cat.challenge3.title'),
+      description: t('game.cat.challenge3.description'),
+      target: { x: 4, y: 3 },
+      blocks: [
+        { id: 'move_forward', text: t('game.cat.block.forward'), icon: '⬆️', color: '#4CAF50' },
+        { id: 'move_backward', text: t('game.cat.block.backward'), icon: '⬇️', color: '#f44336' },
+        { id: 'move_left', text: t('game.cat.block.left'), icon: '⬅️', color: '#2196F3' },
+        { id: 'move_right', text: t('game.cat.block.right'), icon: '➡️', color: '#FF9800' }
+      ],
+      solution: ['move_right', 'move_right', 'move_right', 'move_right', 'move_forward', 'move_forward', 'move_forward'],
+      hint: t('game.cat.challenge3.hint')
     }
-    
-    // Default questions if no specific match
-    return [
-      { question: "What should you do before crossing the street?", answer: "Look both ways", options: ["Run quickly", "Look both ways", "Close your eyes", "Jump"] },
-      { question: "Which is a safe password?", answer: "MyDog123!", options: ["123", "password", "MyDog123!", "abc"] },
-      { question: "What color means 'stop' in traffic lights?", answer: "Red", options: ["Green", "Yellow", "Red", "Blue"] }
-    ];
+  ], [t, language]); // Recreate when language changes
+
+  const currentChallengeData = challenges[currentChallenge];
+
+  // Animate cat movement
+  const animateCatMovement = async (blocks) => {
+    setIsAnimating(true);
+    // Reset cat to start position
+    let currentPos = { x: 0, y: 4 }; // Start at bottom left (row 4, col 0)
+    setCatPosition(currentPos);
+
+    // Filter out non-movement blocks
+    const movementBlocks = blocks.filter(b => b && typeof b === 'string' && b.startsWith('move_'));
+
+    for (let i = 0; i < movementBlocks.length; i++) {
+      const block = movementBlocks[i];
+      await new Promise(resolve => {
+        setTimeout(() => {
+          if (block === 'move_forward') {
+            currentPos.y = Math.max(0, currentPos.y - 1); // Up = decrease row
+          } else if (block === 'move_backward') {
+            currentPos.y = Math.min(4, currentPos.y + 1); // Down = increase row
+          } else if (block === 'move_left') {
+            currentPos.x = Math.max(0, currentPos.x - 1); // Left = decrease col
+          } else if (block === 'move_right') {
+            currentPos.x = Math.min(4, currentPos.x + 1); // Right = increase col
+          }
+          setCatPosition({ ...currentPos });
+          playClick();
+          resolve();
+        }, 800); // Slow movement (800ms) so kids can see the cat move clearly
+      });
+    }
+
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 500);
+
+    return currentPos;
   };
 
-  const questions = generateQuestions();
+  const handleBlockSelect = (blockId) => {
+    if (selectedBlocks.length >= 10) return; // Limit sequence
+    playBlockSelect();
+    setSelectedBlocks(prev => [...prev, blockId]);
+  };
 
-  const handleAnswer = (answer) => {
-    setAnswered(true);
-    let newScore = score;
-    
-    if (answer === questions[currentQuestion].answer) {
-      newScore = score + 1;
-      setScore(newScore);
+  const handleBlockRemove = (index) => {
+    playClick();
+    setSelectedBlocks(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRun = async () => {
+    if (selectedBlocks.length === 0) {
+      playError();
+      return;
     }
+
+    playClick();
+    const finalPosition = await animateCatMovement(selectedBlocks);
     
-    onProgress(((currentQuestion + 1) / questions.length) * 100);
+    // Check if cat reached target
+    const target = currentChallengeData.target;
+    const isCorrectAnswer = finalPosition.x === target.x && finalPosition.y === target.y;
+    setIsCorrect(isCorrectAnswer);
+
+    if (isCorrectAnswer) {
+      playSuccess();
+      setScore(prev => prev + 1);
+      const nextChallenge = currentChallenge + 1;
+      onProgress((nextChallenge / challenges.length) * 100);
     
     setTimeout(() => {
-      if (currentQuestion < questions.length - 1) {
-        setCurrentQuestion(currentQuestion + 1);
-        setAnswered(false);
+        if (nextChallenge < challenges.length) {
+          setCurrentChallenge(nextChallenge);
+          setSelectedBlocks([]);
+          setIsCorrect(null);
+          setShowHint(false);
+          setCatPosition({ x: 0, y: 4 }); // Reset to start position
+          setIsAnimating(false);
       } else {
-        onComplete((newScore / questions.length) * 100);
+          const finalPercentage = (score + 1) / challenges.length * 100;
+          onComplete(finalPercentage);
       }
     }, 2000);
+    } else {
+      playError();
+      setTimeout(() => {
+        setIsCorrect(null);
+        setSelectedBlocks([]);
+        setCatPosition({ x: 0, y: 4 }); // Reset to start position
+        setIsAnimating(false);
+      }, 2000);
+    }
+  };
+
+  const resetChallenge = () => {
+    playClick();
+    setSelectedBlocks([]);
+    setIsCorrect(null);
+    setShowHint(false);
+    setCatPosition({ x: 0, y: 4 }); // Reset to start position (bottom left)
+    setIsAnimating(false);
   };
 
   return (
-    <div className="quiz-game">
-      <div className="quiz-question">
-        <h3>{questions[currentQuestion].question}</h3>
+    <div className="cat-movement-game">
+      <div className="game-header-cat">
+        <h2>{currentChallengeData.title}</h2>
+        <p>{currentChallengeData.description}</p>
       </div>
       
-      {answered ? (
-        <div className="answer-feedback">
-          <p>Good job! Moving to next question...</p>
+      {/* Game Board Visualization - Always visible */}
+      <div className="game-board-container">
+        <div className="game-board">
+          {Array.from({ length: 5 }).map((_, row) => (
+            <div key={row} className="game-row">
+              {Array.from({ length: 5 }).map((_, col) => {
+                const isCat = catPosition.x === col && catPosition.y === row;
+                const isTarget = currentChallengeData.target.x === col && currentChallengeData.target.y === row;
+                const isStart = col === 0 && row === 4;
+
+                return (
+                  <div key={col} className={`game-cell ${isCat ? 'cat-cell' : ''} ${isTarget ? 'target-cell' : ''} ${isStart ? 'start-cell' : ''}`}>
+                    {isCat && <div className="cat-emoji">🐱</div>}
+                    {isTarget && !isCat && <div className="target-emoji">🍽️</div>}
+                    {isStart && !isCat && !isTarget && <div className="start-emoji">🚀</div>}
         </div>
-      ) : (
-        <div className="quiz-options">
-          {questions[currentQuestion].options.map((option, index) => (
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Available Blocks */}
+      <div className="blocks-section">
+        <h3>{t('game.cat.blocks.title')}</h3>
+        <div className="available-blocks">
+          {currentChallengeData.blocks.map((block) => (
             <button
-              key={index}
-              className="option-button"
-              onClick={() => handleAnswer(option)}
+              key={block.id}
+              className="block-button"
+              onClick={() => handleBlockSelect(block.id)}
+              style={{ backgroundColor: block.color }}
             >
-              {option}
+              <span className="block-icon">{block.icon}</span>
+              <span className="block-text">{block.text}</span>
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Selected Blocks Sequence */}
+      <div className="selected-blocks-section">
+        <h3>{t('game.cat.code.title')}</h3>
+        <div className="selected-blocks">
+          {selectedBlocks.length === 0 ? (
+            <p className="no-blocks">{t('game.cat.code.empty')}</p>
+          ) : (
+            selectedBlocks.map((blockId, index) => {
+              const block = currentChallengeData.blocks.find(b => b.id === blockId);
+              return (
+                <div key={index} className="selected-block" style={{ backgroundColor: block?.color || '#667eea' }}>
+                  <span className="block-icon">{block?.icon || '⬆️'}</span>
+                  <span className="block-text">{block?.text || blockId}</span>
+                  <button className="remove-block" onClick={() => handleBlockRemove(index)}>×</button>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="game-actions">
+        <button className="run-button" onClick={handleRun} disabled={selectedBlocks.length === 0 || isAnimating}>
+          ▶️ {t('game.cat.actions.run')}
+        </button>
+        <button className="reset-button" onClick={resetChallenge}>
+          🔄 {t('game.cat.actions.reset')}
+        </button>
+        <button className="hint-button" onClick={() => { setShowHint(!showHint); playClick(); }}>
+          💡 {t('game.cat.actions.hint')}
+        </button>
+      </div>
+
+      {/* Hint */}
+      {showHint && (
+        <div className="hint-box">
+          <p>{currentChallengeData.hint}</p>
+        </div>
       )}
-      
-      <div className="quiz-progress">
-        Question {currentQuestion + 1} of {questions.length} | Score: {score}
+
+      {/* Feedback */}
+      {isCorrect === true && (
+        <div className="feedback success">
+          <div className="success-icon">🎉</div>
+          <p>{t('game.cat.feedback.success')}</p>
+        </div>
+      )}
+
+      {isCorrect === false && (
+        <div className="feedback error">
+          <div className="error-icon">😅</div>
+          <p>{t('game.cat.feedback.error')}</p>
+        </div>
+      )}
+
+      {/* Progress */}
+      <div className="game-progress">
+        {t('game.cat.progress', { current: currentChallenge + 1, total: challenges.length, score })}
       </div>
     </div>
   );
 };
 
 const InteractiveGame = ({ game, onComplete, onProgress }) => {
+  const { playClick, playSuccess } = useSound();
   const [clicks, setClicks] = useState(0);
+  const [catPosition, setCatPosition] = useState({ x: 0, y: 0 });
+  const [isBouncing, setIsBouncing] = useState(false);
   const targetClicks = 10;
 
   const handleClick = () => {
+    playClick();
+    setIsBouncing(true);
+    
+    // Move cat around randomly
+    setCatPosition({
+      x: Math.random() * 200 - 100,
+      y: Math.random() * 100 - 50
+    });
+    
     const newClicks = clicks + 1;
     setClicks(newClicks);
     onProgress((newClicks / targetClicks) * 100);
     
+    setTimeout(() => setIsBouncing(false), 500);
+    
     if (newClicks >= targetClicks) {
-      setTimeout(() => onComplete(100), 1000);
+      playSuccess();
+      setTimeout(() => onComplete(100), 1500);
     }
+  };
+
+  // Cat encouraging messages
+  const getEncouragement = () => {
+    if (clicks === 0) return "🐱 Hi! I'm Whiskers! Click me to start!";
+    if (clicks < targetClicks / 2) return `🐱 Yay! ${clicks} clicks! Keep going!`;
+    if (clicks < targetClicks) return `🐱 Almost there! ${targetClicks - clicks} more!`;
+    return "🐱 Wow! You did it! Amazing! 🎉";
   };
 
   return (
     <div className="interactive-game">
-      <h3>Click the button {targetClicks} times!</h3>
+      <div className="game-header-fun">
+        <h3>🐱 Play with Whiskers the Cat!</h3>
+        <p className="encouragement-text">{getEncouragement()}</p>
+      </div>
+      
       <div className="click-area">
-        <button className="click-button" onClick={handleClick}>
-          🎯 Click Me! ({clicks}/{targetClicks})
+        <div className="cat-container" 
+             style={{ 
+               transform: `translate(${catPosition.x}px, ${catPosition.y}px)`,
+               animation: isBouncing ? 'bounce 0.5s ease' : 'none'
+             }}>
+          <div className="animated-cat">🐱</div>
+          {isBouncing && <div className="sparkle">✨</div>}
+        </div>
+        
+        <button 
+          className={`click-button ${isBouncing ? 'clicked' : ''}`}
+          onClick={handleClick}
+          style={{
+            transform: isBouncing ? 'scale(1.2)' : 'scale(1)',
+            background: `linear-gradient(135deg, hsl(${clicks * 36}, 70%, 60%), hsl(${clicks * 36 + 30}, 70%, 50%))`
+          }}
+        >
+          <span className="button-emoji">🎯</span>
+          <span className="button-text">Click Me!</span>
+          <span className="button-count">({clicks}/{targetClicks})</span>
         </button>
       </div>
+      
       {clicks >= targetClicks && (
         <div className="completion-message">
-          <p>🎉 Great job! You did it!</p>
+          <div className="celebration-cat">🐱🎉</div>
+          <p>Awesome! Whiskers is so happy! You're a superstar! ⭐</p>
         </div>
       )}
     </div>
@@ -527,81 +830,297 @@ const InteractiveGame = ({ game, onComplete, onProgress }) => {
 };
 
 const StoryGame = ({ game, onComplete, onProgress }) => {
+  const { playNextButton, playSuccess } = useSound();
+  const { t, language } = useLanguage();
   const [currentPage, setCurrentPage] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [catPosition, setCatPosition] = useState({ x: 0, y: 0 });
+  const [isSpeaking, setIsSpeaking] = useState(false);
   
-  const story = [
-    { text: "Once upon a time, there was a brave little mouse...", image: "🐭" },
-    { text: "The mouse wanted to learn about computers!", image: "💻" },
-    { text: "First, the mouse learned to use a keyboard.", image: "⌨️" },
-    { text: "Then, the mouse learned to browse safely online.", image: "🌐" },
-    { text: "The mouse became a digital expert! The End.", image: "🏆" }
-  ];
+  // Fun, engaging story with animated cat character - using translations (recreated when language changes)
+  const story = React.useMemo(() => [
+    { 
+      text: t('story.page1.text'), 
+      character: "🐱",
+      action: "bounce",
+      sound: "meow"
+    },
+    { 
+      text: t('story.page2.text'), 
+      character: "🐱",
+      action: "walk-right",
+      sound: "excited"
+    },
+    { 
+      text: t('story.page3.text'), 
+      character: "🐱",
+      action: "type",
+      sound: "click"
+    },
+    { 
+      text: t('story.page4.text'), 
+      character: "🐱",
+      action: "surf",
+      sound: "success"
+    },
+    { 
+      text: t('story.page5.text'), 
+      character: "🐱",
+      action: "celebrate",
+      sound: "celebration"
+    }
+  ], [t, language]); // Recreate when language changes
 
-  const nextPage = () => {
-    const newPage = currentPage + 1;
-    setCurrentPage(newPage);
-    onProgress((newPage / story.length) * 100);
-    
-    if (newPage >= story.length - 1) {
-      setTimeout(() => onComplete(100), 2000);
+  // Animate character based on action
+  useEffect(() => {
+    if (story[currentPage]?.action) {
+      setIsAnimating(true);
+      const action = story[currentPage].action;
+      
+      if (action === 'walk-right') {
+        // Animate cat walking
+        let x = 0;
+        const walkInterval = setInterval(() => {
+          x += 5;
+          setCatPosition({ x: Math.min(x, 300), y: 0 });
+          if (x >= 300) {
+            clearInterval(walkInterval);
+            setIsAnimating(false);
+          }
+        }, 50);
+        return () => clearInterval(walkInterval);
+      } else if (action === 'celebrate') {
+        // Bouncing celebration
+        const bounceInterval = setInterval(() => {
+          setCatPosition(prev => ({ ...prev, y: prev.y === 0 ? -20 : 0 }));
+        }, 300);
+        setTimeout(() => {
+          clearInterval(bounceInterval);
+          setIsAnimating(false);
+        }, 2000);
+        return () => clearInterval(bounceInterval);
+      } else {
+        setIsAnimating(false);
+      }
+    }
+  }, [currentPage]);
+
+  // Text-to-speech for cat with kid voice
+  const speakText = (text) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Get kid-like voice
+      const voices = window.speechSynthesis.getVoices();
+      const kidVoice = voices.find(v => 
+        v.name.toLowerCase().includes('female') ||
+        v.name.toLowerCase().includes('zira') ||
+        v.name.toLowerCase().includes('samantha')
+      ) || voices.find(v => v.default) || voices[0];
+      
+      if (kidVoice) {
+        utterance.voice = kidVoice;
+      }
+      
+      // Make it sound like a kid - higher pitch, faster, louder
+      utterance.rate = 1.2; // Faster (kids talk faster when excited)
+      utterance.pitch = 1.7; // Much higher pitch (kids have higher voices)
+        utterance.volume = 0.95; // Slightly louder
+        // Set language based on current language setting
+        utterance.lang = language === 'rw' ? 'rw-RW' : 'en-US'; // Kinyarwanda or English
+      
+      setIsSpeaking(true);
+      window.speechSynthesis.speak(utterance);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = (error) => {
+        console.error('Speech error:', error);
+        setIsSpeaking(false);
+      };
     }
   };
+
+      // Auto-speak when page changes or language changes
+      useEffect(() => {
+        if (story[currentPage]) {
+          setTimeout(() => {
+            speakText(story[currentPage].text);
+          }, 300);
+        }
+        return () => {
+          if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+          }
+        };
+      }, [currentPage, language, story]);
+
+  const nextPage = () => {
+    if (playNextButton) {
+    playNextButton();
+    }
+    
+    // Stop current speech
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+    
+    const newPage = currentPage + 1;
+    
+    // If we've reached the last page, complete the game
+    if (newPage >= story.length) {
+      if (playSuccess) {
+        playSuccess();
+      }
+      setTimeout(() => {
+        onProgress(100);
+        onComplete(100);
+      }, 500);
+      return;
+    }
+    
+    // Move to next page
+    setCurrentPage(newPage);
+    onProgress((newPage / story.length) * 100);
+  };
+
+  const currentStory = story[currentPage];
 
   return (
     <div className="story-game">
       <div className="story-page">
-        <div className="story-image">{story[currentPage].image}</div>
-        <p className="story-text">{story[currentPage].text}</p>
+        <div className={`story-character ${currentStory?.action || ''} ${isAnimating ? 'animating' : ''}`}
+             style={{ 
+               transform: `translate(${catPosition.x}px, ${catPosition.y}px)`,
+               animation: isAnimating ? `${currentStory?.action || 'bounce'} 1s ease-in-out infinite` : 'none'
+             }}>
+          <div className="character-emoji">{currentStory?.character || '🐱'}</div>
+          {isSpeaking && <div className="speaking-indicator">💬</div>}
+        </div>
+        <div className="story-text-container">
+          <p className="story-text">{currentStory?.text || ''}</p>
+        </div>
       </div>
       
       {currentPage < story.length - 1 && (
         <button className="next-button" onClick={nextPage}>
-          Next →
+          {t('story.button.next')}
+        </button>
+      )}
+      
+      {currentPage === story.length - 1 && (
+        <button className="next-button finish-button" onClick={nextPage}>
+          {t('story.button.finish')}
         </button>
       )}
       
       <div className="story-progress">
-        Page {currentPage + 1} of {story.length}
+        {t('story.progress', { current: currentPage + 1, total: story.length })}
       </div>
     </div>
   );
 };
 
 const DefaultGame = ({ game, onComplete, onProgress }) => {
+  const { playNextButton, playSuccess } = useSound();
+  const { t, language } = useLanguage();
   const [step, setStep] = useState(0);
+  const [catVisible, setCatVisible] = useState(true);
+  const [catMoved, setCatMoved] = useState(false);
   const totalSteps = 5;
 
-  const nextStep = () => {
-    const newStep = step + 1;
-    setStep(newStep);
-    onProgress((newStep / totalSteps) * 100);
-    
-    if (newStep >= totalSteps) {
-      onComplete(100);
+  // Fun interactive steps with animated cat - using translations (recreated when language changes)
+  const steps = React.useMemo(() => [
+    { 
+      emoji: "🐱", 
+      text: t('game.default.step1', { subject: game.subject || t('game.default.subject.default') }),
+      action: "bounce"
+    },
+    { 
+      emoji: "🎮", 
+      text: t('game.default.step2', { subject: game.subject || t('game.default.subject.default') }),
+      action: "excited"
+    },
+    { 
+      emoji: "⭐", 
+      text: t('game.default.step3'),
+      action: "happy"
+    },
+    { 
+      emoji: "🎯", 
+      text: t('game.default.step4'),
+      action: "cheer"
+    },
+    { 
+      emoji: "🏆", 
+      text: t('game.default.step5'),
+      action: "celebrate"
     }
+  ], [t, language, game.subject]); // Recreate when language or subject changes
+
+  const nextStep = () => {
+    if (playNextButton) {
+    playNextButton();
+    }
+    setCatMoved(true);
+    
+    setTimeout(() => {
+    const newStep = step + 1;
+    
+      // If we've completed all steps, finish the game
+    if (newStep >= totalSteps) {
+        setStep(newStep - 1); // Keep showing last step
+        onProgress(100);
+        setCatMoved(false);
+        if (playSuccess) {
+          playSuccess();
+        }
+        setTimeout(() => onComplete(100), 500);
+        return;
+      }
+      
+      // Move to next step
+      setStep(newStep);
+      onProgress((newStep / totalSteps) * 100);
+      setCatMoved(false);
+    }, 300);
   };
+
+  const currentStepData = steps[step] || steps[0];
 
   return (
     <div className="default-game">
-      <h3>{game.title}</h3>
-      <p>{game.description}</p>
+      <div className="fun-game-header">
+        <div className={`animated-character ${currentStepData.action} ${catMoved ? 'moving' : ''}`}>
+          <div className="character-big">{currentStepData.emoji}</div>
+        </div>
+        <h3>{game.title || 'Fun Learning Game!'}</h3>
+      </div>
       
       <div className="game-content">
-        <p>Step {step + 1}: Learning about {game.subject}!</p>
-        <div className="learning-content">
-          {game.content ? (
-            <div dangerouslySetInnerHTML={{ __html: game.content }} />
-          ) : (
-            <p>This is an interactive learning experience about {game.subject}.</p>
+        <div className="step-content">
+          <p className="fun-text">{currentStepData.text}</p>
+          {game.description && (
+            <p className="game-description-text">{game.description}</p>
           )}
         </div>
       </div>
       
-      {step < totalSteps && (
+      {step < totalSteps - 1 && (
         <button className="continue-button" onClick={nextStep}>
-          Continue Learning →
+          {t('game.default.button.next')}
         </button>
       )}
+      
+      {step === totalSteps - 1 && (
+        <button className="continue-button finish-button" onClick={nextStep}>
+          {t('game.default.button.finish')}
+        </button>
+      )}
+      
+      <div className="step-progress">
+        {t('game.default.progress', { current: step + 1, total: totalSteps })}
+      </div>
     </div>
   );
 };

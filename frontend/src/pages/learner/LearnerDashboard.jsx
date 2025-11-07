@@ -160,75 +160,49 @@ const LearnerDashboard = () => {
     <div className="student-dashboard">
       {/* Simple Welcome */}
       <div className="simple-welcome">
-        <h1>🎮 Choose Your Game!</h1>
+        <h1>🎮 Let's Play & Learn!</h1>
+        <p>Choose what you want to do! 🚀</p>
       </div>
 
-      {/* Games Grid - Main Focus */}
-      <div className="main-games-section">
-        {loading ? (
-          <div className="loading-container">
-            <div className="spinner"></div>
-            <p>Loading your games...</p>
-          </div>
-        ) : (
-          <div className="games-grid">
-            {gamifiedContent.length > 0 ? (
-              gamifiedContent.map((game) => (
-                <div key={game.id} className="game-card">
-                  <div className="game-icon-large">
-                    {getGameTypeIcon(game.gameType)}
-        </div>
-
-                  <h3 className="game-title">{game.title}</h3>
-                  <p className="game-description">{game.description}</p>
-                  
-                  <div className="game-rewards">
-                    <div className="reward-item">
-                      <span>⭐ {game.pointsReward} points</span>
-          </div>
-                    <div className="reward-item">
-                      <span>⏱️ {game.estimatedTime || 10} min</span>
-        </div>
+      {/* Quick Actions */}
+      <div className="quick-actions">
+        <button 
+          className="quick-action-btn games-btn"
+          onClick={() => navigate('/dashboard/games')}
+        >
+          <span className="action-icon">🎮</span>
+          <span className="action-text">Play Games</span>
+        </button>
+        <button 
+          className="quick-action-btn puzzles-btn"
+          onClick={() => navigate('/dashboard/puzzles')}
+        >
+          <span className="action-icon">🧩</span>
+          <span className="action-text">Solve Puzzles</span>
+        </button>
+        <button 
+          className="quick-action-btn badges-btn"
+          onClick={() => navigate('/dashboard/achievements')}
+        >
+          <span className="action-icon">🏆</span>
+          <span className="action-text">My Badges</span>
+        </button>
       </div>
 
-                  <button 
-                    className="play-button-large"
-                    onClick={() => handleGameStart(game)}
-                  >
-                    🎮 PLAY NOW!
-                  </button>
-            </div>
-              ))
-            ) : (
-              <div className="no-games">
-                <div className="no-games-icon">🎮</div>
-                <h3>Loading games...</h3>
-                <p>Getting your fun games ready!</p>
-          </div>
-            )}
-            </div>
-        )}
-          </div>
-
-      {/* Simple Badges at Bottom */}
-      <div className="simple-badges">
-        <h2>🏆 My Badges</h2>
-        <div className="badges-row">
-          {recentBadges.length > 0 ? (
-            recentBadges.slice(0, 3).map(badge => (
+      {/* Simple Badges */}
+      {recentBadges.length > 0 && (
+        <div className="simple-badges">
+          <h2>🌟 Recent Badges</h2>
+          <div className="badges-row">
+            {recentBadges.slice(0, 3).map(badge => (
               <div key={badge.id || badge.badgeId} className="badge-simple">
                 <div className="badge-icon">{badge.icon || badge.badge?.icon || '🏆'}</div>
                 <span>{badge.name || badge.title || badge.badge?.name || 'Badge'}</span>
-            </div>
-            ))
-          ) : (
-            <div className="badge-simple">
-              <div className="badge-icon">🏆</div>
-              <span>Complete courses to earn badges!</span>
+              </div>
+            ))}
           </div>
-          )}
-            </div>
-          </div>
+        </div>
+      )}
 
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -247,8 +221,58 @@ const LearnerDashboard = () => {
           .simple-welcome h1 {
             color: white;
             font-size: 3rem;
-            margin: 0;
+            margin: 0 0 0.5rem 0;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+          }
+
+          .simple-welcome p {
+            color: white;
+            font-size: 1.5rem;
+            margin: 0;
+            opacity: 0.9;
+          }
+
+          .quick-actions {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+          }
+
+          .quick-action-btn {
+            background: white;
+            border: none;
+            border-radius: 25px;
+            padding: 2rem 3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            min-width: 180px;
+          }
+
+          .quick-action-btn:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+          }
+
+          .games-btn:hover { background: linear-gradient(135deg, #ffeaa7, #fdcb6e); }
+          .puzzles-btn:hover { background: linear-gradient(135deg, #a8e6cf, #dcedc1); }
+          .badges-btn:hover { background: linear-gradient(135deg, #ffd3a5, #fd9853); }
+
+          .action-icon {
+            font-size: 4rem;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+          }
+
+          .action-text {
+            color: #2D3748;
+            font-size: 1.3rem;
+            font-weight: bold;
           }
 
           .main-games-section {

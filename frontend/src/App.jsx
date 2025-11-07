@@ -18,10 +18,15 @@ import HelpCenter from './pages/support/HelpCenter'
 import FAQ from './pages/support/FAQ'
 import CookiesBanner from './components/CookiesBanner'
 import NotFound from './pages/public/NotFound'
+import { NotificationProvider } from './components/common/NotificationSystem'
+import LiveBot from './components/common/LiveBot'
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, isAuthenticated, loading } = useAuth()
+  
+  // Check for token in localStorage as backup (in case state hasn't updated yet)
+  const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('authToken')
 
   // Don't redirect while still checking authentication
   if (loading) {
@@ -49,12 +54,40 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     )
   }
 
-  if (!isAuthenticated || !user) {
-    console.log('[ProtectedRoute] User not authenticated, redirecting to login', { isAuthenticated, user })
+  // If we have a token but no user yet, wait a bit for auth context to initialize
+  if (hasToken && !user && !loading) {
+    console.log('[ProtectedRoute] Token exists but user not loaded yet, waiting...')
+    // Give AuthContext a moment to load the user from token
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        background: 'linear-gradient(135deg, #FFB3BA, #B9FBC0)',
+        fontFamily: 'Comic Sans MS, cursive, sans-serif'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          background: 'white',
+          padding: '2rem',
+          borderRadius: '25px',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎓</div>
+          <h2 style={{ color: '#2D3748', margin: '0 0 1rem 0' }}>Loading...</h2>
+          <p style={{ color: '#4A5568', margin: 0 }}>Verifying your account...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated && !hasToken) {
+    console.log('[ProtectedRoute] User not authenticated, redirecting to login', { isAuthenticated, user, hasToken })
     return <Navigate to="/login" replace />
   }
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
+  if (allowedRoles.length > 0 && user && !allowedRoles.includes(user?.role)) {
     console.log('[ProtectedRoute] User role not allowed', { userRole: user?.role, allowedRoles })
     return <Navigate to="/" replace />
   }
@@ -75,7 +108,10 @@ function App() {
       <ThemeProvider>
         <LanguageProvider>
           <AuthProvider>
-            <AppRoutes />
+            <NotificationProvider>
+              <AppRoutes />
+              <LiveBot />
+            </NotificationProvider>
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>

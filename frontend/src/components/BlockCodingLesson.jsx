@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from '../lib/language'
+import { useAuth } from '../contexts/AuthContext'
+import { useSound } from '../lib/soundEffects'
 import ProgressTracker from './ProgressTracker'
 import Icon from './icons/Icon'
 import './CodePlayStyles.css'
 
 export default function BlockCodingLesson({ lesson, onComplete, onProgress }) {
   const { t } = useTranslation()
+  const { user } = useAuth()
+  const { playNextButton, playClick, playSuccess } = useSound()
   const [currentPuzzle, setCurrentPuzzle] = useState(0)
   const [selectedBlocks, setSelectedBlocks] = useState([])
   const [isCompleted, setIsCompleted] = useState(false)
@@ -189,6 +193,7 @@ export default function BlockCodingLesson({ lesson, onComplete, onProgress }) {
   }
 
   const handleNext = () => {
+    playNextButton()
     if (currentPuzzle < puzzles.length - 1) {
       setCurrentPuzzle(currentPuzzle + 1)
       setIsCompleted(false)
@@ -228,7 +233,7 @@ export default function BlockCodingLesson({ lesson, onComplete, onProgress }) {
         <div className="header-right">
           <div className="user-profile">
             <div className="avatar">🐱</div>
-            <span className="user-name">Hi, Alex</span>
+            <span className="user-name">Hi, {user?.fullName?.split(' ')[0] || 'Student'}</span>
           </div>
         </div>
       </div>

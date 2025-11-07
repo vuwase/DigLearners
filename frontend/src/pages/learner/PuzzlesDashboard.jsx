@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import gamifiedApiService from '../../services/gamifiedApiService';
 import { getContentByGrade } from '../../lib/contentFilter';
 import './GamesDashboard.css';
 
-const GamesDashboard = () => {
-  const location = useLocation();
+const PuzzlesDashboard = () => {
   const { user } = useAuth();
   const [content, setContent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const getNormalizedGrade = () => {
-    const rawGrade = user?.grade || location.state?.grade;
+    const rawGrade = user?.grade;
     if (!rawGrade) return null;
     const parsed = parseInt(rawGrade.toString().replace('Grade ', '').trim(), 10);
     if (!Number.isFinite(parsed) || parsed <= 0) return null;
@@ -23,76 +21,67 @@ const GamesDashboard = () => {
     };
   };
 
-  const fetchGames = async () => {
+  const fetchPuzzles = async () => {
     try {
       setLoading(true);
       setError('');
 
       const normalizedGrade = getNormalizedGrade();
-      let games = [];
+      let puzzles = [];
 
       try {
         const response = await gamifiedApiService.getMyContent();
         const data = response.data || response;
         if (Array.isArray(data) && data.length > 0) {
-          const filtered = data.filter(item => {
-            const allowed = ['interactive', 'quiz', 'simulation', 'creative', 'story'];
-            return allowed.includes(item.gameType?.toLowerCase());
-          });
+          const filtered = data.filter(item => item.gameType?.toLowerCase() === 'puzzle');
           if (filtered.length > 0) {
-            games = filtered;
+            puzzles = filtered;
           }
         }
       } catch (err) {
-        console.warn('[GamesDashboard] getMyContent failed, falling back to grade fetch.', err);
+        console.warn('[PuzzlesDashboard] getMyContent failed, falling back to grade fetch.', err);
       }
 
-      if (games.length === 0 && normalizedGrade) {
+      if (puzzles.length === 0 && normalizedGrade) {
         try {
           const gradeResponse = await gamifiedApiService.getContentByGrade(normalizedGrade.gradeLabel);
           const gradeData = gradeResponse.data || gradeResponse;
           if (Array.isArray(gradeData) && gradeData.length > 0) {
-            const filtered = gradeData.filter(item => {
-              const allowed = ['interactive', 'quiz', 'simulation', 'creative', 'story'];
-              return allowed.includes(item.gameType?.toLowerCase());
-            });
-            games = getContentByGrade(filtered, normalizedGrade.gradeNum);
+            const filtered = gradeData.filter(item => item.gameType?.toLowerCase() === 'puzzle');
+            puzzles = getContentByGrade(filtered, normalizedGrade.gradeNum);
           }
         } catch (gradeErr) {
-          console.warn('[GamesDashboard] getContentByGrade failed:', gradeErr);
+          console.warn('[PuzzlesDashboard] getContentByGrade failed:', gradeErr);
         }
       }
 
-      if (games.length === 0) {
+      if (puzzles.length === 0) {
         try {
-          const allResponse = await gamifiedApiService.getAllContent();
+          const allResponse = await gamifiedApiService.getAllContent({ gameType: 'puzzle' });
           const allData = allResponse.data || allResponse;
           if (Array.isArray(allData)) {
-            const allowed = ['interactive', 'quiz', 'simulation', 'creative', 'story'];
-            games = allData.filter(item => allowed.includes(item.gameType?.toLowerCase()));
+            puzzles = allData.filter(item => item.gameType?.toLowerCase() === 'puzzle');
             if (normalizedGrade) {
-              games = getContentByGrade(games, normalizedGrade.gradeNum);
+              puzzles = getContentByGrade(puzzles, normalizedGrade.gradeNum);
             }
           }
         } catch (allErr) {
-          console.warn('[GamesDashboard] getAllContent failed:', allErr);
+          console.warn('[PuzzlesDashboard] getAllContent failed:', allErr);
         }
       }
 
-      setContent(games);
+      setContent(puzzles);
     } catch (error) {
-      setError('Failed to load games. Please try again.');
-      console.error('Error fetching games:', error);
+      setError('Failed to load puzzles. Please try again.');
+      console.error('Error fetching puzzles:', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchGames();
+    fetchPuzzles();
   }, [user?.grade]);
-
-  // Content is already filtered to only games
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
@@ -103,22 +92,8 @@ const GamesDashboard = () => {
     }
   };
 
-  const getGameTypeIcon = (gameType) => {
-    switch (gameType) {
-      case 'puzzle': return '🧩';
-      case 'quiz': return '❓';
-      case 'interactive': return '🎮';
-      case 'story': return '📚';
-      case 'simulation': return '🎯';
-      case 'creative': return '🎨';
-      default: return '🎮';
-    }
-  };
-
   const handleGameStart = (game) => {
-    // Store the selected game in localStorage
     localStorage.setItem('selectedGame', JSON.stringify(game));
-    // Navigate to the game player with the game data
     window.location.href = `/dashboard/game/${game.id}`;
   };
 
@@ -127,7 +102,7 @@ const GamesDashboard = () => {
       <div className="games-dashboard">
         <div className="loading-container">
           <div className="spinner"></div>
-          <p>Loading your games...</p>
+          <p>Loading puzzles... 🧩</p>
         </div>
       </div>
     );
@@ -138,12 +113,9 @@ const GamesDashboard = () => {
       <div className="games-dashboard">
         <div className="error-container">
           <div className="error-icon">⚠️</div>
-          <h2>Oops! Something went wrong</h2>
+          <h2>Oops!</h2>
           <p>{error}</p>
-          <button 
-            className="retry-button"
-            onClick={fetchGames}
-          >
+          <button className="retry-button" onClick={fetchPuzzles}>
             Try Again
           </button>
         </div>
@@ -155,42 +127,39 @@ const GamesDashboard = () => {
     <div className="games-dashboard">
       <div className="dashboard-header">
         <div className="header-content">
-          <h1>🎮 Fun Games!</h1>
-          <p>Let's play and learn! 🚀</p>
+          <h1>🧩 Fun Puzzles!</h1>
+          <p>Challenge your brain with these cool puzzles! 🧠</p>
         </div>
       </div>
 
-      {/* Games Grid */}
       <div className="games-grid">
         {content.length === 0 ? (
           <div className="no-games">
-            <div className="no-games-icon">🎮</div>
-            <h3>No games yet!</h3>
-            <p>More games coming soon! 🎉</p>
+            <div className="no-games-icon">🧩</div>
+            <h3>No puzzles yet!</h3>
+            <p>More puzzles coming soon! 🎉</p>
           </div>
         ) : (
-          content.map((game) => (
-            <div key={game.id} className="game-card">
+          content.map((puzzle) => (
+            <div key={puzzle.id} className="game-card">
               <div className="game-header">
-                <div className="game-icon">
-                  {getGameTypeIcon(game.gameType)}
-                </div>
+                <div className="game-icon">🧩</div>
                 <span 
                   className="difficulty-badge"
-                  style={{ backgroundColor: getDifficultyColor(game.difficulty) }}
+                  style={{ backgroundColor: getDifficultyColor(puzzle.difficulty) }}
                 >
-                  {game.difficulty}
+                  {puzzle.difficulty}
                 </span>
               </div>
 
               <div className="game-content">
-                <h3 className="game-title">{game.title}</h3>
-                <p className="game-description">{game.description}</p>
+                <h3 className="game-title">{puzzle.title}</h3>
+                <p className="game-description">{puzzle.description}</p>
                 
                 <div className="game-meta">
                   <div className="meta-item">
                     <span className="meta-icon">⭐</span>
-                    <span>{game.pointsReward} points</span>
+                    <span>{puzzle.pointsReward} points</span>
                   </div>
                 </div>
               </div>
@@ -198,9 +167,9 @@ const GamesDashboard = () => {
               <div className="game-actions">
                 <button 
                   className="play-button"
-                  onClick={() => handleGameStart(game)}
+                  onClick={() => handleGameStart(puzzle)}
                 >
-                  🎮 Let's Play!
+                  🧩 Let's Play!
                 </button>
               </div>
             </div>
@@ -211,4 +180,5 @@ const GamesDashboard = () => {
   );
 };
 
-export default GamesDashboard;
+export default PuzzlesDashboard;
+

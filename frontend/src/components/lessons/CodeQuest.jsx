@@ -1,5 +1,6 @@
 // Code Quest - Gamified Block Coding Lesson for Kids
 import React, { useState, useEffect, useRef } from 'react'
+import { useSound } from '../../lib/soundEffects'
 import './CodeQuest.css'
 
 const CodeQuest = ({ onComplete, onProgress }) => {
@@ -12,11 +13,15 @@ const CodeQuest = ({ onComplete, onProgress }) => {
   const [selectedBlocks, setSelectedBlocks] = useState([])
   const [isCorrect, setIsCorrect] = useState(null)
   const [showHint, setShowHint] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(120) // 2 minutes per challenge
+  const [timeLeft, setTimeLeft] = useState(180) // 3 minutes per challenge (increased for kids)
   const [stars, setStars] = useState(0)
   const [showCelebration, setShowCelebration] = useState(false)
   const [achievements, setAchievements] = useState([])
+  const [catPosition, setCatPosition] = useState({ x: 0, y: 0 }) // For cat movement visualization
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [showGameBoard, setShowGameBoard] = useState(false)
 
+  const { playClick, playBlockSelect, playSuccess, playError } = useSound()
   const intervalRef = useRef(null)
 
   // Block coding challenges for different levels
@@ -140,7 +145,10 @@ const CodeQuest = ({ onComplete, onProgress }) => {
       setSelectedBlocks([])
       setIsCorrect(null)
       setShowHint(false)
-      setTimeLeft(120)
+      setTimeLeft(180) // Increased time
+      setCatPosition({ x: 0, y: 0 })
+      setIsAnimating(false)
+      setShowGameBoard(false)
     }
   }, [currentLevel, gameState])
 
@@ -158,23 +166,62 @@ const CodeQuest = ({ onComplete, onProgress }) => {
 
   const handleBlockSelect = (block) => {
     if (selectedBlocks.length >= 8) return // Limit sequence length
-    
+    playBlockSelect()
     setSelectedBlocks(prev => [...prev, block.id])
   }
 
   const handleBlockRemove = (index) => {
+    playClick()
     setSelectedBlocks(prev => prev.filter((_, i) => i !== index))
   }
 
-  const checkSolution = () => {
+  const animateCatMovement = async (blocks) => {
+    setIsAnimating(true)
+    setShowGameBoard(true)
+    let currentPos = { x: 0, y: 0 }
+    setCatPosition(currentPos)
+
+    // Filter out start and end blocks
+    const movementBlocks = blocks.filter(b => b.startsWith('move_'))
+
+    for (let i = 0; i < movementBlocks.length; i++) {
+      const block = movementBlocks[i]
+      await new Promise(resolve => {
+        setTimeout(() => {
+          if (block === 'move_up') {
+            currentPos.y = Math.max(0, currentPos.y - 1)
+          } else if (block === 'move_down') {
+            currentPos.y = Math.min(4, currentPos.y + 1)
+          } else if (block === 'move_left') {
+            currentPos.x = Math.max(0, currentPos.x - 1)
+          } else if (block === 'move_right') {
+            currentPos.x = Math.min(4, currentPos.x + 1)
+          }
+          setCatPosition({ ...currentPos })
+          playClick()
+          resolve()
+        }, 800) // Slower movement - 800ms per step (was faster)
+      })
+    }
+
+    setTimeout(() => {
+      setIsAnimating(false)
+    }, 500)
+  }
+
+  const checkSolution = async () => {
     const currentChallengeData = challenges[currentLevel][currentChallenge]
     const solution = currentChallengeData.solution
+    
+    // Animate the cat movement first
+    await animateCatMovement(selectedBlocks)
     
     // Check if solution matches
     const isSolutionCorrect = JSON.stringify(selectedBlocks) === JSON.stringify(solution)
     setIsCorrect(isSolutionCorrect)
     
     if (isSolutionCorrect) {
+      playSuccess()
       const points = 100 + (streak * 50) + (timeLeft * 2)
       setScore(prev => prev + points)
       setStreak(prev => prev + 1)
@@ -185,8 +232,9 @@ const CodeQuest = ({ onComplete, onProgress }) => {
       
       setTimeout(() => {
         nextChallenge()
-      }, 2000)
+      }, 3000) // Increased delay to see the result
     } else {
+      playError()
       setLives(prev => {
         const newLives = prev - 1
         if (newLives <= 0) {
@@ -228,7 +276,10 @@ const CodeQuest = ({ onComplete, onProgress }) => {
       setSelectedBlocks([])
       setIsCorrect(null)
       setShowHint(false)
-      setTimeLeft(120)
+      setTimeLeft(180) // Increased time
+      setCatPosition({ x: 0, y: 0 })
+      setIsAnimating(false)
+      setShowGameBoard(false)
     } else {
       // Level completed
       if (currentLevel < 3) {
@@ -237,7 +288,10 @@ const CodeQuest = ({ onComplete, onProgress }) => {
         setSelectedBlocks([])
         setIsCorrect(null)
         setShowHint(false)
-        setTimeLeft(120)
+        setTimeLeft(180) // Increased time
+        setCatPosition({ x: 0, y: 0 })
+        setIsAnimating(false)
+        setShowGameBoard(false)
         setShowCelebration(true)
         setTimeout(() => setShowCelebration(false), 3000)
       } else {
@@ -267,9 +321,12 @@ const CodeQuest = ({ onComplete, onProgress }) => {
     setSelectedBlocks([])
     setIsCorrect(null)
     setShowHint(false)
-    setTimeLeft(120)
+    setTimeLeft(180) // Increased time
     setStars(0)
     setAchievements([])
+    setCatPosition({ x: 0, y: 0 })
+    setIsAnimating(false)
+    setShowGameBoard(false)
   }
 
   const getAchievementInfo = (achievementId) => {
@@ -426,6 +483,35 @@ const CodeQuest = ({ onComplete, onProgress }) => {
             <p>{currentChallengeData.description}</p>
           </div>
 
+          {/* Game Board Visualization - especially for cat challenge */}
+          {(currentChallengeData.target === 'food' || showGameBoard) && (
+            <div className="game-board-container">
+              <h4>Watch the Cat Move! 🐱</h4>
+              <div className="game-board">
+                {Array.from({ length: 5 }).map((_, row) => (
+                  <div key={row} className="game-row">
+                    {Array.from({ length: 5 }).map((_, col) => {
+                      const isCat = catPosition.x === col && catPosition.y === row
+                      const isFood = col === 4 && row === 4 && currentChallengeData.target === 'food'
+                      const isStart = col === 0 && row === 0 && currentChallengeData.target === 'food'
+                      return (
+                        <div
+                          key={`${row}-${col}`}
+                          className={`game-cell ${isCat ? 'cat-cell' : ''} ${isFood ? 'food-cell' : ''} ${isStart ? 'start-cell' : ''}`}
+                        >
+                          {isCat && <span className="cat-emoji">🐱</span>}
+                          {isFood && !isCat && <span className="food-emoji">🍽️</span>}
+                          {isStart && !isCat && currentChallengeData.target === 'food' && <span className="start-emoji">🏠</span>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                ))}
+              </div>
+              {isAnimating && <p className="animation-hint">The cat is moving... Watch carefully! 👀</p>}
+            </div>
+          )}
+
           <div className="code-workspace">
             <div className="sequence-area">
               <h4>Your Code Sequence:</h4>
@@ -447,7 +533,7 @@ const CodeQuest = ({ onComplete, onProgress }) => {
                 })}
                 {selectedBlocks.length === 0 && (
                   <div className="empty-sequence">
-                    Drag blocks here to create your code!
+                    Click blocks below to create your code!
                   </div>
                 )}
               </div>

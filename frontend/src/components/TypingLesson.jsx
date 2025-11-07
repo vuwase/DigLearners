@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from '../lib/language'
+import { useAuth } from '../contexts/AuthContext'
 import ProgressTracker from './ProgressTracker'
 import Icon from './icons/Icon'
 import './CodePlayStyles.css'
 
 export default function TypingLesson({ lesson, onComplete, onProgress }) {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const [currentText, setCurrentText] = useState('')
   const [userInput, setUserInput] = useState('')
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -124,7 +126,7 @@ export default function TypingLesson({ lesson, onComplete, onProgress }) {
             <div className="avatar">
               <Icon name="computer" size={24} />
             </div>
-            <span className="user-name">Hi, Alex</span>
+            <span className="user-name">Hi, {user?.fullName?.split(' ')[0] || 'Student'}</span>
           </div>
         </div>
       </div>

@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from '../../lib/language'
+import { useAuth } from '../../contexts/AuthContext'
 import learnerApiService from '../../services/learnerApiService'
 import AchievementNotification from '../../components/AchievementNotification'
+import StudentProfile from '../../components/student/StudentProfile'
 import Icon from '../../components/icons/Icon'
 import '../../components/CodePlayStyles.css'
 
 export default function Achievements() {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [showNotification, setShowNotification] = useState(false)
   const [currentBadge, setCurrentBadge] = useState(null)
@@ -17,22 +20,42 @@ export default function Achievements() {
 
   useEffect(() => {
     fetchAchievements()
+    
+    // Refresh achievements if there's a refresh flag (from game completion)
+    const refreshFlag = localStorage.getItem('refreshAchievements')
+    if (refreshFlag === 'true') {
+      localStorage.removeItem('refreshAchievements')
+      // Refresh after a short delay to ensure backend has processed
+      setTimeout(() => {
+        fetchAchievements()
+      }, 1000)
+    }
   }, [])
 
   const fetchAchievements = async () => {
     try {
       setLoading(true)
+      console.log('[Achievements] Fetching achievements...')
       const response = await learnerApiService.getAchievements()
-      console.log('[Achievements] API response:', response)
+      console.log('[Achievements] Full API response:', JSON.stringify(response, null, 2))
       
       // Handle different response formats
       const badgesData = response.data?.badges || response.badges || []
       const achievementsData = response.data?.achievements || response.achievements || []
       
+      console.log('[Achievements] Badges data:', badgesData)
+      console.log('[Achievements] Badges count:', badgesData.length)
+      console.log('[Achievements] Earned badges:', badgesData.filter(b => b.isEarned))
+      
       setBadges(badgesData)
       setAchievements(achievementsData)
+      
+      if (badgesData.length === 0) {
+        console.warn('[Achievements] No badges found in response!')
+      }
     } catch (err) {
-      console.error('Error fetching achievements:', err)
+      console.error('[Achievements] Error fetching achievements:', err)
+      console.error('[Achievements] Error details:', err.message, err.stack)
       setError(err.message)
       // Set fallback data
       setBadges([])
@@ -66,9 +89,15 @@ export default function Achievements() {
     setCurrentBadge(null)
   }
 
-  const earnedBadges = badges.filter(badge => badge.isEarned)
+  const earnedBadges = badges.filter(badge => badge.isEarned === true || badge.isEarned === 'true')
   const pendingBadges = badges.filter(badge => !badge.isEarned)
   const completionRate = badges.length > 0 ? Math.round((earnedBadges.length / badges.length) * 100) : 0
+  
+  // Debug logging
+  console.log('[Achievements] Current badges state:', badges)
+  console.log('[Achievements] Earned badges count:', earnedBadges.length)
+  console.log('[Achievements] Earned badges:', earnedBadges)
+  console.log('[Achievements] Total points:', earnedBadges.reduce((sum, badge) => sum + (badge.points || 0), 0))
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString()
@@ -115,179 +144,67 @@ export default function Achievements() {
 
       <div className="achievements-header">
         <div className="header-content">
-          <h1>🏆 My Amazing Badges!</h1>
-          <p>Look at all the cool badges you've earned! Keep learning to get more! 🌟</p>
+          <h1>🏆 My Badges!</h1>
+          <p>Awesome work! Keep learning! 🌟</p>
         </div>
         <div className="kid-avatar">
-          <div className="avatar-circle">👦</div>
+          <StudentProfile showFullProfile={false} />
           <div className="kid-info">
-            <h3>Alex</h3>
-            <p>Badge Collector</p>
+            <h3>{user?.fullName?.split(' ')[0] || 'Student'}</h3>
           </div>
         </div>
       </div>
 
-      {/* Achievement Stats */}
+      {/* Achievement Stats - Simplified */}
       <div className="achievement-stats">
         <div className="stat-card stat-1">
           <div className="stat-icon">🏆</div>
           <div className="stat-content">
             <h3>{earnedBadges.length}</h3>
-            <p>Badges Earned!</p>
-          </div>
-        </div>
-        <div className="stat-card stat-2">
-          <div className="stat-icon">📊</div>
-          <div className="stat-content">
-            <h3>{completionRate}%</h3>
-            <p>Completion Rate</p>
+            <p>Badges!</p>
           </div>
         </div>
         <div className="stat-card stat-3">
           <div className="stat-icon">⭐</div>
           <div className="stat-content">
-            <h3>{earnedBadges.reduce((sum, badge) => sum + badge.points, 0)}</h3>
-            <p>Points from Badges!</p>
-          </div>
-        </div>
-        <div className="stat-card stat-4">
-          <div className="stat-icon">🎯</div>
-          <div className="stat-content">
-            <h3>{pendingBadges.length}</h3>
-            <p>Available Badges</p>
+            <h3>{earnedBadges.reduce((sum, badge) => sum + (badge.points || 0), 0)}</h3>
+            <p>Points!</p>
           </div>
         </div>
       </div>
 
-      {/* Recent Achievements */}
-      <div className="recent-achievements-section">
-        <h2>🎉 Recent Achievements</h2>
-        <div className="recent-badges-grid">
-          {(achievements || []).map(achievement => (
-            <div key={achievement.id} className="recent-badge-card">
-              <div className="badge-icon-large">{achievement.icon}</div>
-              <div className="badge-info">
-                <h4>{achievement.name}</h4>
-                <p>Earned {formatDate(achievement.earnedAt)}</p>
-              </div>
-              <button 
-                className="celebrate-btn"
-                onClick={() => simulateAchievement(achievement)}
-              >
-                🎉 Celebrate!
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Category Filter */}
-      <div className="category-filter-section">
-        <h2>🔍 Filter by Category</h2>
-        <div className="category-buttons">
-          {categories.map(category => (
-            <button
-              key={category.id}
-              className={`category-btn ${selectedCategory === category.id ? 'active' : ''}`}
-              style={{ 
-                background: selectedCategory === category.id ? category.bgGradient : 'white',
-                borderColor: category.color,
-                color: selectedCategory === category.id ? 'white' : category.color,
-                boxShadow: selectedCategory === category.id ? `0 4px 15px ${category.color}40` : '0 2px 8px rgba(0,0,0,0.1)'
-              }}
-              onClick={() => setSelectedCategory(category.id)}
-            >
-              <span className="category-emoji">
-                {category.id === 'all' ? '🏆' : 
-                 category.id === 'achievement' ? '🎯' :
-                 category.id === 'milestone' ? '📈' : '⭐'}
-              </span>
-              <span>{category.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Badge Collection */}
+      {/* Badge Collection - Simplified */}
       <div className="badge-collection-section">
-        <h2>🏆 Badge Collection</h2>
+        <h2>🏆 My Badges</h2>
         <div className="badges-grid">
-          {getFilteredBadges().map(badge => (
+          {getFilteredBadges().slice(0, 6).map(badge => (
             <div 
               key={badge.id} 
               className={`badge-card ${badge.isEarned ? 'earned' : 'locked'}`}
             >
               <div className="badge-card-header">
-                <div className="badge-icon">{badge.icon}</div>
+                <div className="badge-icon">{badge.icon || '🏆'}</div>
                 <div className="badge-name">{badge.name}</div>
-              </div>
-              
-              <div className="badge-description">{badge.description}</div>
-              
-              <div className="badge-points">
-                <span className="points-badge">+{badge.points} pts</span>
               </div>
               
               {badge.isEarned ? (
                 <div className="badge-earned">
-                  <div className="earned-date">
-                    ✅ Earned {formatDate(badge.earnedAt)}
-                  </div>
+                  <div className="earned-date">✅ Got it!</div>
                   <button 
                     className="celebrate-button"
                     onClick={() => simulateAchievement(badge)}
                   >
-                    🎉 Celebrate!
+                    🎉
                   </button>
                 </div>
               ) : (
                 <div className="badge-locked">
                   <div className="locked-icon">🔒</div>
-                  <div className="locked-text">
-                    Keep learning to unlock! Complete more lessons to earn this badge!
-                  </div>
                 </div>
               )}
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Achievement Tips */}
-      <div className="achievement-tips-section">
-        <h2>💡 Tips to Earn More Badges!</h2>
-        <div className="tips-grid">
-          <div className="tip-card">
-            <div className="tip-icon">📚</div>
-            <div className="tip-content">
-              <h4>Complete Lessons</h4>
-              <p>Finish lessons to earn achievement badges!</p>
-            </div>
-          </div>
-          
-          <div className="tip-card">
-            <div className="tip-icon">🔥</div>
-            <div className="tip-content">
-              <h4>Maintain Streaks</h4>
-              <p>Learn daily to earn streak badges!</p>
-            </div>
-          </div>
-          
-          <div className="tip-card">
-            <div className="tip-icon">⭐</div>
-            <div className="tip-content">
-              <h4>Perfect Scores</h4>
-              <p>Get 100% on lessons for special badges!</p>
-            </div>
-          </div>
-          
-          <div className="tip-card">
-            <div className="tip-icon">🏆</div>
-            <div className="tip-content">
-              <h4>Top Rankings</h4>
-              <p>Be among the top performers weekly!</p>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -297,7 +214,11 @@ export default function Achievements() {
             min-height: 100vh;
             background: linear-gradient(180deg, #FFF0F7 0%, #FFE5F1 30%, #E8F4FD 70%, #D1E9FF 100%);
             padding: 2rem;
+            padding-top: 3rem;
+            margin-top: 0;
             font-family: 'Comic Sans MS', cursive, sans-serif;
+            position: relative;
+            z-index: 1;
           }
 
           .achievements-header {

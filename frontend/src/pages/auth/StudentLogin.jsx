@@ -19,10 +19,7 @@ const StudentLogin = ({
 }) => {
   const { t } = useLanguage()
   const navigate = useNavigate()
-  const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
-    fullName: '',
-    grade: '',
     registrationCode: '',
     loginType: 'student'
   })
@@ -31,7 +28,6 @@ const StudentLogin = ({
   useEffect(() => {
     console.log('[StudentLogin] Component mounted', { 
       hasOnLogin: typeof onLogin === 'function',
-      currentStep,
       formData 
     })
   }, [])
@@ -40,15 +36,6 @@ const StudentLogin = ({
   useEffect(() => {
     console.log('[StudentLogin] Form data updated:', formData)
   }, [formData])
-
-  const grades = [
-    { value: 'Grade 1', label: t('grades.grade1') },
-    { value: 'Grade 2', label: t('grades.grade2') },
-    { value: 'Grade 3', label: t('grades.grade3') },
-    { value: 'Grade 4', label: t('grades.grade4') },
-    { value: 'Grade 5', label: t('grades.grade5') },
-    { value: 'Grade 6', label: t('grades.grade6') }
-  ]
 
   // Helper functions for error handling
   const getErrorClass = (error) => {
@@ -111,36 +98,8 @@ const StudentLogin = ({
     setError('') // Clear error when user starts typing
   }
 
-  const handleNext = () => {
-    // Validate current step
-    if (currentStep === 1 && !formData.fullName.trim()) {
-      setError(t('auth.student.nameRequired'))
-      return
-    }
-    if (currentStep === 2 && !formData.grade) {
-      setError(t('auth.student.gradeRequired'))
-      return
-    }
-      if (currentStep === 3 && !formData.registrationCode.trim()) {
-        setError(t('auth.student.codeRequired'))
-        return
-      }
-
-    setError('')
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1)
-    }
-  }
-
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-      setError('')
-    }
-  }
-
   const handleSubmit = async (e) => {
-    console.log('[StudentLogin] handleSubmit called', { e, formData, currentStep })
+    console.log('[StudentLogin] handleSubmit called', { e, formData })
     
     // Prevent any default behavior
     if (e) {
@@ -150,35 +109,16 @@ const StudentLogin = ({
     
     console.log('[StudentLogin] Starting validation...')
     
-    // Ensure we're on step 3 (registration code step)
-    if (currentStep !== 3) {
-      console.log('[StudentLogin] Not on step 3, current step:', currentStep)
-      setCurrentStep(3)
+    // Validate registration code only
+    if (!formData.registrationCode.trim()) {
+      setError(t('auth.student.codeRequired') || 'Please enter your registration code')
       return
     }
     
-    // Validate all fields
-    if (!formData.fullName.trim()) {
-      console.log('[StudentLogin] Validation failed: missing fullName')
-      setError(t('auth.student.nameRequired'))
-      setCurrentStep(1)
-      return
-    }
-    if (!formData.grade) {
-      setError(t('auth.student.gradeRequired'))
-      setCurrentStep(2)
-      return
-    }
-    if (!formData.registrationCode.trim()) {
-      setError(t('auth.student.codeRequired'))
-      setCurrentStep(3)
-      return
-    }
     // Code format validation: 6 alphanumeric
     const code = formData.registrationCode.trim().toUpperCase()
     if (!/^[A-Z0-9]{6}$/.test(code)) {
       setError('Registration code must be 6 letters/numbers (e.g., ABC123)')
-      setCurrentStep(3)
       return
     }
 
@@ -187,81 +127,67 @@ const StudentLogin = ({
     setSuccess(false)
 
     try {
-      // Normalize grade format: extract just the number if it's "Grade X" format
-      // This ensures it matches what's stored in the database
-      let normalizedGrade = formData.grade
-      if (normalizedGrade && normalizedGrade.startsWith('Grade ')) {
-        normalizedGrade = normalizedGrade.replace('Grade ', '').trim()
-      }
-      
       console.log('[StudentLogin] Attempting student login:', {
-        fullName: formData.fullName,
-        originalGrade: formData.grade,
-        normalizedGrade: normalizedGrade,
         registrationCode: code
       })
       
-      const result = await onLogin({ 
-        ...formData, 
-        grade: normalizedGrade, // Send normalized grade
-        registrationCode: code 
-      })
+      // Send only registration code and loginType for simplified student login
+      const loginData = {
+        registrationCode: code,
+        loginType: 'student'
+      }
+      
+      console.log('[StudentLogin] Sending login request:', { registrationCode: code, loginType: 'student' })
+      
+      const result = await onLogin(loginData)
       
       console.log('[StudentLogin] Login result:', {
         success: result?.success,
         hasUser: !!result?.user,
         hasToken: !!result?.token,
         userRole: result?.user?.role,
-        userGrade: result?.user?.grade
+        userGrade: result?.user?.grade,
+        error: result?.error
       })
       
-      // Check if login was successful - handle both result structures
-      const isSuccess = result?.success !== false && (result?.user || result?.token || result)
-      
-      if (!isSuccess || result?.error) {
-        const errorMsg = result?.error || t('auth.loginError')
+      // Check if login was successful
+      if (result?.error || (result?.success === false)) {
+        const errorMsg = result?.error || t('auth.loginError') || 'Login failed'
         console.error('[StudentLogin] Login failed:', errorMsg)
         setError(errorMsg)
         setLoading(false)
-      } else {
-        console.log('[StudentLogin] Login successful! User:', result?.user?.fullName || result?.fullName || 'Student')
-        setSuccess(true)
-        
-        // Show success message briefly before redirect
-        setTimeout(() => {
-          console.log('[StudentLogin] Redirecting to dashboard...')
-          console.log('[StudentLogin] Current path:', window.location.pathname)
-          console.log('[StudentLogin] User state:', { 
-            role: result?.user?.role, 
-            name: result?.user?.fullName,
-            hasToken: !!localStorage.getItem('authToken')
-          })
-          
-          try {
-            // Use React Router navigate (client-side navigation)
-            console.log('[StudentLogin] Attempting React Router navigate...')
-            navigate('/dashboard', { replace: true })
-            
-            // Check if navigation worked after a delay
-            setTimeout(() => {
-              const currentPath = window.location.pathname
-              console.log('[StudentLogin] Path after navigate:', currentPath)
-              
-              if (currentPath !== '/dashboard' && currentPath !== '/dashboard/') {
-                console.warn('[StudentLogin] React Router navigate failed, using window.location')
-                // Only use window.location as last resort - this will cause a full reload
-                window.location.href = '/dashboard'
-              } else {
-                console.log('[StudentLogin] Successfully navigated to dashboard via React Router')
-              }
-            }, 500)
-          } catch (navError) {
-            console.error('[StudentLogin] Navigation error:', navError)
-            // Last resort: full page reload
-            window.location.href = '/dashboard'
-          }
-        }, 1000) // Increased delay to ensure state is set
+        return
       }
+      
+      // Check if we have a valid result (user or token)
+      if (!result?.user && !result?.token && result?.success !== true) {
+        console.error('[StudentLogin] Login failed: Invalid result structure', result)
+        setError('Login failed. Please try again.')
+        setLoading(false)
+        return
+      }
+      
+      console.log('[StudentLogin] Login successful! User:', result?.user?.fullName || result?.fullName || 'Student')
+      setSuccess(true)
+      
+      // Verify token was saved before redirecting
+      const tokenSaved = localStorage.getItem('authToken')
+      console.log('[StudentLogin] Token saved:', !!tokenSaved)
+      
+      if (!tokenSaved && result?.token) {
+        // If token wasn't saved by AuthContext, save it manually
+        console.log('[StudentLogin] Manually saving token...')
+        localStorage.setItem('authToken', result.token)
+      }
+      
+      // Wait a bit longer to ensure auth state is updated, then redirect
+      setTimeout(() => {
+        console.log('[StudentLogin] Redirecting to dashboard...')
+        console.log('[StudentLogin] Token check:', !!localStorage.getItem('authToken'))
+        
+        // Use window.location for more reliable redirect
+        window.location.href = '/dashboard'
+      }, 1500) // Increased delay to ensure everything is set
     } catch (err) {
       console.error('[StudentLogin] ERROR in handleSubmit:', err)
       console.error('[StudentLogin] Error details:', {
@@ -289,90 +215,37 @@ const StudentLogin = ({
     }
   }
 
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="question-step">
-            <div className="step-header">
-              <div className="step-number">1</div>
-              <h3>{t('auth.student.question1')}</h3>
-              <p className="step-description">{t('auth.student.question1Desc')}</p>
-            </div>
-            <div className="form-group">
-              <input
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                placeholder={t('auth.student.namePlaceholder')}
-                className="question-input"
-                autoFocus
-              />
-            </div>
-          </div>
-        )
-      
-      case 2:
-        return (
-          <div className="question-step">
-            <div className="step-header">
-              <div className="step-number">2</div>
-              <h3>{t('auth.student.question2')}</h3>
-              <p className="step-description">{t('auth.student.question2Desc')}</p>
-            </div>
-            <div className="form-group">
-              <div className="grade-options">
-                {grades.map((grade) => (
-                  <button
-                    key={grade.value}
-                    type="button"
-                    className={`grade-option ${formData.grade === grade.value ? 'selected' : ''}`}
-                    onClick={() => setFormData({ ...formData, grade: grade.value })}
-                  >
-                    <span className="grade-icon">📚</span>
-                    <span className="grade-text">{grade.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )
-      
-      case 3:
-        return (
-          <div className="question-step">
-            <div className="step-header">
-              <div className="step-number">3</div>
-              <h3>{t('auth.student.question3')}</h3>
-              <p className="step-description">{t('auth.student.question3Desc')}</p>
-            </div>
-            <div className="form-group">
-              <input
-                type="text"
-                name="registrationCode"
-                value={formData.registrationCode}
-                onChange={handleChange}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && currentStep === 3) {
-                    e.preventDefault()
-                    console.log('[StudentLogin] Enter key pressed in registration code input')
-                    handleSubmit(e)
-                  }
-                }}
-                placeholder={t('auth.student.codePlaceholder')}
-                className="question-input registration-code-input"
-                autoFocus
-                maxLength="6"
-                style={{ textTransform: 'uppercase', letterSpacing: '0.2em', fontFamily: 'monospace' }}
-              />
-            </div>
-          </div>
-        )
-      
-      default:
-        return null
-    }
+  // Simplified: Only registration code step
+  const renderRegistrationCodeInput = () => {
+    return (
+      <div className="question-step">
+        <div className="step-header">
+          <div className="step-number">🔑</div>
+          <h3>Enter Your Registration Code</h3>
+          <p className="step-description">Your teacher gave you a special code to log in. Enter it here!</p>
+        </div>
+        <div className="form-group">
+          <input
+            type="text"
+            name="registrationCode"
+            value={formData.registrationCode}
+            onChange={handleChange}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                console.log('[StudentLogin] Enter key pressed in registration code input')
+                handleSubmit(e)
+              }
+            }}
+            placeholder="ABC123"
+            className="question-input registration-code-input"
+            autoFocus
+            maxLength="6"
+            style={{ textTransform: 'uppercase', letterSpacing: '0.2em', fontFamily: 'monospace' }}
+          />
+        </div>
+      </div>
+    )
   }
 
   const handleFormSubmit = (e) => {
@@ -408,12 +281,7 @@ const StudentLogin = ({
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault()
-      if (currentStep < 3) {
-        handleNext()
-      } else {
-        // On step 3, trigger login
-        handleSubmit(e)
-      }
+      handleSubmit(e)
     }
   }
 
@@ -422,17 +290,6 @@ const StudentLogin = ({
       <h2>{t('auth.studentLogin')}</h2>
       <p className="login-subtitle">{t('auth.studentLoginSubtitle')}</p>
       
-      {/* Progress indicator */}
-      <div className="progress-indicator">
-        {[1, 2, 3].map((step) => (
-          <div 
-            key={step}
-            className={`progress-step ${currentStep >= step ? 'active' : ''} ${currentStep > step ? 'completed' : ''}`}
-          >
-            {currentStep > step ? '✓' : step}
-          </div>
-        ))}
-      </div>
 
       {success && (
         <div className="success-message">
@@ -475,109 +332,55 @@ const StudentLogin = ({
       )}
 
       {/* Current step content */}
-      {renderStep()}
-
-      {/* Summary of answers */}
-      {currentStep > 1 && (
-        <div className="answer-summary">
-          <h4>{t('auth.student.yourAnswers')}</h4>
-          {formData.fullName && (
-            <div className="answer-item">
-              <span className="answer-label">{t('auth.student.name')}:</span>
-              <span className="answer-value">{formData.fullName}</span>
-            </div>
-          )}
-          {formData.grade && (
-            <div className="answer-item">
-              <span className="answer-label">{t('auth.student.grade')}:</span>
-              <span className="answer-value">{formData.grade}</span>
-            </div>
-          )}
-          {formData.registrationCode && currentStep === 3 && (
-            <div className="answer-item">
-              <span className="answer-label">{t('auth.student.code')}:</span>
-              <span className="answer-value">{formData.registrationCode.toUpperCase()}</span>
-            </div>
-          )}
-        </div>
-      )}
+      {renderRegistrationCodeInput()}
 
       {/* Navigation buttons */}
       <div className="step-navigation">
-        {currentStep > 1 && (
-          <button 
-            type="button" 
-            className="nav-button back-button"
-            onClick={handleBack}
-            disabled={loading}
-          >
-            ← {t('common.back')}
-          </button>
-        )}
-        
-        {currentStep < 3 ? (
-          <button 
-            type="button" 
-            className="nav-button next-button"
-            onClick={handleNext}
-            disabled={loading}
-          >
-            {t('common.next')} →
-          </button>
-        ) : (
-          <button 
-            type="button"
-            className={`nav-button login-button ${success ? 'success' : ''}`}
-            disabled={loading || success}
-            onClick={async (e) => {
-              console.log('[StudentLogin] Start Learning button clicked', { loading, success, formData, currentStep })
-              e.preventDefault()
-              e.stopPropagation()
-              
-              // Don't proceed if button is disabled
-              if (loading || success) {
-                console.log('[StudentLogin] Button disabled, ignoring click')
-                return false
-              }
-              
-              // Ensure we're on step 3
-              if (currentStep !== 3) {
-                console.warn('[StudentLogin] Button clicked but not on step 3! Current step:', currentStep)
-                setCurrentStep(3)
-                return false
-              }
-              
-              // Call handleSubmit directly - button is type="button" so won't submit form
-              console.log('[StudentLogin] Calling handleSubmit directly from button...')
-              try {
-                await handleSubmit(e)
-              } catch (err) {
-                console.error('[StudentLogin] Error in button onClick:', err)
-                setError(err.message || 'An error occurred during login')
-                setLoading(false)
-              }
-              
+        <button 
+          type="button"
+          className={`nav-button login-button ${success ? 'success' : ''}`}
+          disabled={loading || success}
+          onClick={async (e) => {
+            console.log('[StudentLogin] Start Learning button clicked', { loading, success, formData })
+            e.preventDefault()
+            e.stopPropagation()
+            
+            // Don't proceed if button is disabled
+            if (loading || success) {
+              console.log('[StudentLogin] Button disabled, ignoring click')
               return false
-            }}
-          >
-            {success ? (
-              <>
-                <span>✅</span>
-                Success!
-              </>
-            ) : loading ? (
-              <>
-                <span className="loading-spinner">⏳</span>
-                {t('common.loading')}
-              </>
-            ) : (
-              <>
-                <span>🚀</span>
-                {t('auth.student.startLearning')}
-              </>
-            )}
-          </button>
-        )}
+            }
+            
+            // Call handleSubmit directly
+            console.log('[StudentLogin] Calling handleSubmit directly from button...')
+            try {
+              await handleSubmit(e)
+            } catch (err) {
+              console.error('[StudentLogin] Error in button onClick:', err)
+              setError(err.message || 'An error occurred during login')
+              setLoading(false)
+            }
+            
+            return false
+          }}
+        >
+          {success ? (
+            <>
+              <span>✅</span>
+              Success!
+            </>
+          ) : loading ? (
+            <>
+              <span className="loading-spinner">⏳</span>
+              {t('common.loading') || 'Loading...'}
+            </>
+          ) : (
+            <>
+              <span>🚀</span>
+              {t('auth.student.startLearning') || 'Start Learning!'}
+            </>
+          )}
+        </button>
       </div>
 
       <style dangerouslySetInnerHTML={{
@@ -600,39 +403,6 @@ const StudentLogin = ({
             font-size: 0.9rem;
           }
 
-          .progress-indicator {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-          }
-
-          .progress-step {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.9rem;
-            border: 2px solid #e5e7eb;
-            color: #9ca3af;
-            background: white;
-            transition: all 0.3s ease;
-          }
-
-          .progress-step.active {
-            border-color: #FF677D;
-            color: #FF677D;
-            background: #fff5f5;
-          }
-
-          .progress-step.completed {
-            border-color: #10b981;
-            color: white;
-            background: #10b981;
-          }
 
           .question-step {
             margin-bottom: 2rem;

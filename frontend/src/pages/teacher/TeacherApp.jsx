@@ -18,9 +18,36 @@ import AdminSettings from '../admin/Settings'
 import AdminReports from '../admin/Reports'
 
 const TeacherApp = () => {
-  const { user, logout } = useAuth()
+  const { user, logout, loading } = useAuth()
+
+  // Wait for auth to initialize
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        background: 'linear-gradient(135deg, #FFB3BA, #B9FBC0)',
+        fontFamily: 'Comic Sans MS, cursive, sans-serif'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          background: 'white',
+          padding: '2rem',
+          borderRadius: '25px',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👨‍🏫</div>
+          <h2 style={{ color: '#2D3748', margin: '0 0 1rem 0' }}>Loading...</h2>
+          <p style={{ color: '#4A5568', margin: 0 }}>Setting up your teacher dashboard...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
+    console.log('[TeacherApp] User not authorized, redirecting to login', { user, loading })
     return <Navigate to="/login" replace />
   }
 

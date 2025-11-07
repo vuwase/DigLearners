@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from '../lib/language'
+import { useSound } from '../lib/soundEffects'
 import Icon from './icons/Icon'
 import './CodePlayStyles.css'
 
@@ -11,12 +12,18 @@ export default function AchievementNotification({
   duration = 5000 
 }) {
   const { t } = useTranslation()
+  const { playBadgeWin, playCelebration } = useSound()
   const [show, setShow] = useState(isVisible)
 
   useEffect(() => {
     setShow(isVisible)
     
     if (isVisible) {
+      // Play funny badge win sound immediately!
+      playBadgeWin()
+      // Play celebration sound after a short delay
+      setTimeout(() => playCelebration(), 500)
+      
       const timer = setTimeout(() => {
         setShow(false)
         setTimeout(() => onClose && onClose(), 300)
@@ -24,7 +31,7 @@ export default function AchievementNotification({
       
       return () => clearTimeout(timer)
     }
-  }, [isVisible, duration, onClose])
+  }, [isVisible, duration, onClose, playBadgeWin, playCelebration])
 
   if (!show) return null
 

@@ -2,11 +2,12 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import StudentProfile from '../student/StudentProfile';
 import './LearnerLayout.css';
 
 const LearnerLayout = ({ children }) => {
   const { user, logout } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, changeLanguage } = useLanguage();
   const location = useLocation();
 
   const handleLogout = () => {
@@ -28,9 +29,26 @@ const LearnerLayout = ({ children }) => {
         </div>
         <div className="header-right">
           <div className="user-info">
-            <span className="user-name">👦 {user?.fullName?.split(' ')[0] || 'Student'}</span>
+            {/* Language Switcher */}
+            <div className="language-switcher">
+              <button 
+                className={`lang-btn ${language === 'en' ? 'active' : ''}`}
+                onClick={() => changeLanguage('en')}
+                title="English"
+              >
+                🇬🇧 EN
+              </button>
+              <button 
+                className={`lang-btn ${language === 'rw' ? 'active' : ''}`}
+                onClick={() => changeLanguage('rw')}
+                title="Kinyarwanda"
+              >
+                🇷🇼 RW
+              </button>
+            </div>
+            <StudentProfile showFullProfile={false} />
             <button className="logout-btn" onClick={handleLogout}>
-              🚪 Logout
+              🚪 {t('nav.logout') || 'Logout'}
             </button>
           </div>
         </div>
@@ -40,27 +58,27 @@ const LearnerLayout = ({ children }) => {
       <nav className="learner-nav">
         <Link 
           to="/dashboard" 
-          className={`nav-link ${isActive('/dashboard') && !isActive('/dashboard/lessons') && !isActive('/dashboard/games') && !isActive('/dashboard/achievements') ? 'active' : ''}`}
+          className={`nav-link ${location.pathname === '/dashboard' || location.pathname === '/dashboard/' ? 'active' : ''}`}
         >
-          🏠 {t('nav.home') || 'Home'}
-        </Link>
-        <Link 
-          to="/dashboard/lessons" 
-          className={`nav-link ${isActive('/dashboard/lessons') ? 'active' : ''}`}
-        >
-          📚 {t('nav.lessons') || 'Lessons'}
+          🏠 {t('nav.home') || 'My Dashboard'}
         </Link>
         <Link 
           to="/dashboard/games" 
           className={`nav-link ${isActive('/dashboard/games') ? 'active' : ''}`}
         >
-          🎮 {t('student.games') || 'Games'}
+          🎮 {t('nav.games') || 'Games'}
+        </Link>
+        <Link 
+          to="/dashboard/puzzles" 
+          className={`nav-link ${isActive('/dashboard/puzzles') ? 'active' : ''}`}
+        >
+          🧩 {t('nav.puzzles') || 'Puzzles'}
         </Link>
         <Link 
           to="/dashboard/achievements" 
           className={`nav-link ${isActive('/dashboard/achievements') ? 'active' : ''}`}
         >
-          🏆 {t('student.achievements') || 'Achievements'}
+          🏆 {t('nav.achievements') || 'Achievement'}
         </Link>
       </nav>
 

@@ -16,6 +16,9 @@ class LearnerApiService {
     const token = this.getAuthToken();
     const url = `${this.baseURL}${endpoint}`;
     
+    console.log(`[API] Making request to: ${url}`);
+    console.log(`[API] Token present: ${!!token}`);
+    
     const defaultOptions = {
       headers: {
         'Content-Type': 'application/json',
@@ -34,15 +37,20 @@ class LearnerApiService {
 
     try {
       const response = await fetch(url, config);
+      console.log(`[API] Response status: ${response.status} ${response.statusText}`);
+      
       const data = await response.json();
+      console.log(`[API] Response data:`, data);
 
       if (!response.ok) {
+        console.error(`[API] Error response:`, data);
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
 
       return data;
     } catch (error) {
-      console.error('API request failed:', error);
+      console.error(`[API] Request failed for ${url}:`, error);
+      console.error(`[API] Error details:`, error.message, error.stack);
       throw error;
     }
   }

@@ -10,7 +10,8 @@ export const LANGUAGES = {
 export const TRANSLATIONS = {
   [LANGUAGES.EN]: {
     // Navigation
-    'nav.lessons': 'Lessons',
+    'nav.home': 'My Dashboard',
+    'nav.lessons': 'My Lessons',
     'nav.student': 'Student',
     'nav.teacher': 'Teacher',
     'nav.parent': 'Parent',
@@ -19,6 +20,9 @@ export const TRANSLATIONS = {
     'nav.admin': 'Admin',
     'nav.login': 'Login',
     'nav.register': 'Register',
+    'nav.logout': 'Logout',
+    'student.games': 'Play Games',
+    'student.achievements': 'My Achievements',
     
     // Common
     'common.loading': 'Loading...',
@@ -104,7 +108,8 @@ export const TRANSLATIONS = {
   
   [LANGUAGES.RW]: {
     // Navigation
-    'nav.lessons': 'Amasomo',
+    'nav.home': 'Akarubaho Kanjye',
+    'nav.lessons': 'Amasomo Yanjye',
     'nav.student': 'Umunyeshuri',
     'nav.teacher': 'Umwarimu',
     'nav.parent': 'Umubyeyi',
@@ -113,6 +118,9 @@ export const TRANSLATIONS = {
     'nav.admin': 'Umuyobozi',
     'nav.login': 'Winjira',
     'nav.register': 'Iyandikishe',
+    'nav.logout': 'Sohoka',
+    'student.games': 'Kina Imikino',
+    'student.achievements': 'Intsinzi Zanjye',
     
     // Common
     'common.loading': 'Birakora...',

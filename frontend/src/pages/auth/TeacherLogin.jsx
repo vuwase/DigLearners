@@ -116,28 +116,47 @@ const TeacherLogin = ({
         return
       }
       
-      if (!result.success) {
-        const errorMsg = result.error || t('auth.loginError')
+      // Check if login was successful
+      if (result?.error || (result?.success === false)) {
+        const errorMsg = result?.error || t('auth.loginError') || 'Login failed'
         console.error('[TeacherLogin] Login failed:', errorMsg)
         console.error('[TeacherLogin] Full result:', result)
         setError(errorMsg)
-      } else {
-        console.log('[TeacherLogin] Login successful! User:', result.user?.email)
-        console.log('[TeacherLogin] Token received:', !!result.token)
-        setSuccess(true)
-        // Show success message briefly before redirect
-        setTimeout(() => {
-          console.log('[TeacherLogin] Redirecting to dashboard...')
-          navigate('/dashboard', { replace: true })
-          // Fallback hard redirect if router state hasn't updated
-          setTimeout(() => {
-            if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
-              console.log('[TeacherLogin] Fallback redirect to dashboard')
-              window.location.assign('/dashboard')
-            }
-          }, 150)
-        }, 800)
+        setLoading(false)
+        return
       }
+      
+      // Check if we have a valid result (user or token)
+      if (!result?.user && !result?.token && result?.success !== true) {
+        console.error('[TeacherLogin] Login failed: Invalid result structure', result)
+        setError('Login failed. Please try again.')
+        setLoading(false)
+        return
+      }
+      
+      console.log('[TeacherLogin] Login successful! User:', result?.user?.email || result?.user?.fullName || 'Teacher')
+      console.log('[TeacherLogin] Token received:', !!result?.token)
+      setSuccess(true)
+      
+      // Verify token was saved before redirecting
+      const tokenSaved = localStorage.getItem('authToken')
+      console.log('[TeacherLogin] Token saved:', !!tokenSaved)
+      
+      if (!tokenSaved && result?.token) {
+        // If token wasn't saved by AuthContext, save it manually
+        console.log('[TeacherLogin] Manually saving token...')
+        localStorage.setItem('authToken', result.token)
+      }
+      
+      // Wait a bit longer to ensure auth state is updated, then redirect
+      setTimeout(() => {
+        console.log('[TeacherLogin] Redirecting to dashboard...')
+        console.log('[TeacherLogin] Token check:', !!localStorage.getItem('authToken'))
+        console.log('[TeacherLogin] User role:', result?.user?.role)
+        
+        // Use window.location for more reliable redirect
+        window.location.href = '/dashboard'
+      }, 1500) // Increased delay to ensure everything is set
     } catch (err) {
       console.error('Login exception:', err)
       // Enhanced error handling for specific error types

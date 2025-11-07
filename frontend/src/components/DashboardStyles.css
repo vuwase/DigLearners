@@ -19,7 +19,7 @@
 /* Dashboard Container */
 .dashboard-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #FFB3BA, #B9FBC0);
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
   padding: 0;
   width: 100%;
   font-family: 'Comic Sans MS', cursive, sans-serif;
@@ -74,7 +74,7 @@
   align-items: center;
   gap: 1rem;
   transition: all 0.3s ease;
-  border-left: 4px solid #FF677D;
+  border-left: 4px solid #2563eb;
 }
 
 .stat-card:hover {
@@ -89,7 +89,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #FF677D, #F8B400);
+  background: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
   border-radius: 12px;
   flex-shrink: 0;
   color: white !important;
@@ -102,12 +102,12 @@
 .stat-content h3 {
   font-size: 2rem;
   font-weight: bold;
-  color: #0ea5a4;
+  color: #1d4ed8;
   margin: 0 0 0.25rem 0;
 }
 
 .stat-content p {
-  color: #6b7280;
+  color: #475569;
   margin: 0;
   font-size: 0.95rem;
   font-weight: 500;
@@ -153,7 +153,7 @@
 .dashboard-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-  border-color: #FF677D;
+  border-color: #2563eb;
 }
 
 .dashboard-card > * {
@@ -168,7 +168,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #FF677D, #F8B400);
+  background: linear-gradient(135deg, #2563eb 0%, #6366f1 100%);
   color: white !important;
   border-radius: 12px;
   opacity: 1 !important;
@@ -202,13 +202,13 @@
 
 .card-stats {
   font-size: 0.9rem;
-  color: #0ea5a4;
+  color: #2563eb;
   font-weight: 600;
 }
 
 .card-arrow {
   font-size: 1.5rem;
-  color: #0ea5a4;
+  color: #2563eb;
   transition: transform 0.3s ease;
   flex-shrink: 0;
 }
@@ -263,7 +263,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0ea5a4 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #0ea5a4 100%);
   color: white;
   border-radius: 50%;
   flex-shrink: 0;
@@ -277,7 +277,7 @@
 }
 
 .activity-content strong {
-  color: #FF677D;
+  color: #2563eb;
   font-weight: 700;
 }
 
@@ -590,7 +590,7 @@
 /* Print Styles */
 @media print {
   .page-header {
-    background: #0ea5a4;
+    background: #2563eb;
     color: white;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -719,7 +719,7 @@
 
 .lesson-progress-bar {
   height: 100%;
-  background: linear-gradient(135deg, #0ea5a4 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -742,12 +742,12 @@
 }
 
 .lesson-btn.primary {
-  background: linear-gradient(135deg, #0ea5a4 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #6366f1 100%);
   color: white;
 }
 
 .lesson-btn.primary:hover {
-  background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%);
   transform: translateY(-1px);
 }
 
@@ -791,7 +791,7 @@
 }
 
 .filter-tab.active {
-  background: linear-gradient(135deg, #0ea5a4 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #6366f1 100%);
   color: white;
 }
 
@@ -866,7 +866,7 @@
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
   .dashboard-container {
-    background: #1f2937;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   }
   
   .stat-card,
@@ -874,46 +874,41 @@
   .recent-activity,
   .lesson-card,
   .filter-section {
-    background: #374151;
-    color: #f9fafb;
+    background: #ffffff;
+    color: #1f2937;
+    border: 1px solid rgba(15, 23, 42, 0.08);
   }
   
   .page-header h1,
   .page-header p {
-    color: white;
+    color: #1f2937;
   }
   
   .stat-content h3,
   .card-content h3,
   .lesson-title {
-    color: #f9fafb;
+    color: #1f2937;
   }
   
   .stat-content p,
   .card-content p,
-  .lesson-description {
-    color: #d1d5db;
-  }
-  
-  .activity-content p {
-    color: #f9fafb;
-  }
-  
+  .lesson-description,
+  .activity-content p,
   .activity-time {
-    color: #9ca3af;
+    color: #475569;
   }
   
   .lesson-progress {
-    background: #4b5563;
+    background: #e2e8f0;
   }
   
   .filter-tab {
-    background: #4b5563;
-    color: #d1d5db;
+    background: #f1f5f9;
+    color: #1f2937;
   }
   
   .filter-tab:hover:not(.active) {
-    background: #6b7280;
+    background: #e2e8f0;
   }
 }
 
@@ -961,10 +956,10 @@
 }
 
 .child-tab.active {
-  background: #0ea5a4;
+  background: #2563eb;
   color: white;
-  border-color: #0891b2;
-  box-shadow: 0 4px 12px rgba(14, 165, 164, 0.3);
+  border-color: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
 .child-avatar {
@@ -1016,7 +1011,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0ea5a4, #0891b2);
+  background: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
   color: white;
   border-radius: 50%;
   font-weight: bold;
@@ -1043,7 +1038,7 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: conic-gradient(#0ea5a4 0deg, #0ea5a4 var(--progress, 0deg), #e5e7eb var(--progress, 0deg));
+  background: conic-gradient(#2563eb 0deg, #2563eb var(--progress, 0deg), #e5e7eb var(--progress, 0deg));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1070,7 +1065,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: conic-gradient(#0ea5a4 0deg, #0ea5a4 var(--progress, 0deg), #e5e7eb var(--progress, 0deg));
+  background: conic-gradient(#2563eb 0deg, #2563eb var(--progress, 0deg), #e5e7eb var(--progress, 0deg));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1135,7 +1130,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #0ea5a4, #0891b2);
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -1194,9 +1189,9 @@
 }
 
 .category-tab.active {
-  background: #0ea5a4;
+  background: #2563eb;
   color: white;
-  border-color: #0891b2;
+  border-color: #1d4ed8;
 }
 
 /* Badge Cards */
@@ -1258,7 +1253,7 @@
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  background: #0ea5a4;
+  background: #2563eb;
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
@@ -1280,7 +1275,7 @@
   padding: 1.25rem;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   transition: all 0.3s ease;
-  border-left: 4px solid #0ea5a4;
+  border-left: 4px solid #2563eb;
 }
 
 .subject-card:hover {
@@ -1303,7 +1298,7 @@
 }
 
 .subject-progress {
-  background: #0ea5a4;
+  background: #2563eb;
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
@@ -1355,7 +1350,7 @@
 
 .week-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #0ea5a4, #0891b2);
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
   border-radius: 3px;
   transition: width 0.3s ease;
 }

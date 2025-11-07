@@ -22,21 +22,50 @@ export const AuthProvider = ({ children, value: initialValue }) => {
     const initializeAuth = async () => {
       try {
         const token = localStorage.getItem('authToken')
+        console.log('[AuthContext] Initializing auth, token exists:', !!token)
+        
         if (token) {
-          // Verify token with backend
-          const result = await authService.verifyToken()
-          if (result.success) {
-            setUser(result.user)
-          } else {
-            // Token is invalid, remove it
+          try {
+            // Verify token with backend
+            console.log('[AuthContext] Verifying token with backend...')
+            const result = await authService.verifyToken()
+            console.log('[AuthContext] Token verification result:', { 
+              success: result?.success, 
+              hasUser: !!result?.user,
+              userRole: result?.user?.role 
+            })
+            
+            if (result?.success && result?.user) {
+              console.log('[AuthContext] Token verified, setting user:', result.user.email || result.user.fullName)
+              setUser(result.user)
+            } else {
+              // Token is invalid, remove it
+              console.log('[AuthContext] Token invalid, removing from storage')
+              localStorage.removeItem('authToken')
+            }
+          } catch (verifyError) {
+            console.error('[AuthContext] Token verification failed:', verifyError)
+            // If verification fails, try to keep the token if it's a network error
+            // Only remove if it's an authentication error
+            if (verifyError.response?.status === 401 || verifyError.message?.includes('invalid')) {
+              localStorage.removeItem('authToken')
+            }
+          }
+        } else {
+          console.log('[AuthContext] No token found, user not authenticated')
+        }
+      } catch (error) {
+        console.error('[AuthContext] Auth initialization error:', error)
+        // If verification fails, remove invalid token
+        const token = localStorage.getItem('authToken')
+        if (token) {
+          // Only remove if it's clearly an auth error
+          if (error.response?.status === 401 || error.message?.includes('invalid')) {
             localStorage.removeItem('authToken')
           }
         }
-      } catch (error) {
-        console.error('Auth initialization error:', error)
-        // If verification fails, remove invalid token
-        localStorage.removeItem('authToken')
       } finally {
+        console.log('[AuthContext] Auth initialization complete, setting loading to false')
         setLoading(false)
       }
     }
@@ -49,6 +78,43 @@ export const AuthProvider = ({ children, value: initialValue }) => {
       setUser(initialValue.user)
     }
   }, [initialValue?.user])
+
+  // Re-check token if it exists but user is not loaded (after login redirect)
+  // This helps when user navigates immediately after login
+  useEffect(() => {
+    if (loading) return // Don't check while initial loading is happening
+    if (user) return // User already loaded, no need to check
+    
+    const checkTokenOnMount = async () => {
+      const token = localStorage.getItem('authToken')
+      if (token && !user) {
+        console.log('[AuthContext] Token exists but user not loaded, re-verifying...')
+        setLoading(true) // Set loading to prevent redirect loops
+        try {
+          const result = await authService.verifyToken()
+          if (result?.success && result?.user) {
+            console.log('[AuthContext] User loaded from token verification')
+            setUser(result.user)
+          } else {
+            console.log('[AuthContext] Token verification failed, removing token')
+            localStorage.removeItem('authToken')
+          }
+        } catch (error) {
+          console.error('[AuthContext] Token re-verification failed:', error)
+          // Only remove token if it's clearly invalid
+          if (error.response?.status === 401) {
+            localStorage.removeItem('authToken')
+          }
+        } finally {
+          setLoading(false)
+        }
+      }
+    }
+
+    // Small delay to ensure other initialization is complete
+    const timer = setTimeout(checkTokenOnMount, 300)
+    return () => clearTimeout(timer)
+  }, [loading, user]) // Run when loading becomes false or user changes
 
   const login = async (credentials) => {
     console.log('[AuthContext] Login called with:', { 
