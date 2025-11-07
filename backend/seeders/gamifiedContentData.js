@@ -335,6 +335,91 @@ const sampleGamifiedContent = [
     badgeReward: "World Explorer",
     isActive: true
   },
+  {
+    title: "Volcano Adventure Lab",
+    description: "Experiment with virtual volcanoes and keep the island villagers safe",
+    grade: "Grade 4",
+    ageGroup: "9-10",
+    gameType: "simulation",
+    difficulty: "intermediate",
+    subject: "Science",
+    content: JSON.stringify({
+      gameType: "volcano-science",
+      volcanoTypes: ["shield", "composite", "cinder cone"],
+      safetyTools: ["evacuation map", "temperature sensor", "drone camera"],
+      decisions: ["raise alert", "build shelter", "cool lava"]
+    }),
+    instructions: "Predict eruptions, place sensors, and make smart safety choices!",
+    learningObjectives: "Understand volcano types, cause-and-effect, disaster readiness",
+    estimatedTime: 26,
+    pointsReward: 48,
+    badgeReward: "Volcano Guardian",
+    isActive: true
+  },
+  {
+    title: "Comic Strip Creator",
+    description: "Design hilarious comic strips starring clever heroes from Kigali",
+    grade: "Grade 4",
+    ageGroup: "9-10",
+    gameType: "creative",
+    difficulty: "intermediate",
+    subject: "Language",
+    content: JSON.stringify({
+      gameType: "story-comics",
+      panels: 6,
+      characters: ["inventor", "soccer star", "scientist", "explorer"],
+      settings: ["Nyamirambo", "Volcano Park", "Akagera"],
+      powerUps: ["add sound effect", "add speech bubble", "add swoosh"]
+    }),
+    instructions: "Drag characters, write dialogue, and animate each panel for laughs!",
+    learningObjectives: "Story sequencing, dialogue writing, visual storytelling",
+    estimatedTime: 24,
+    pointsReward: 52,
+    badgeReward: "Comic Genius",
+    isActive: true
+  },
+  {
+    title: "Eco Rangers Mission",
+    description: "Team up with friends to rescue endangered animals across Rwanda",
+    grade: "Grade 4",
+    ageGroup: "9-10",
+    gameType: "interactive",
+    difficulty: "intermediate",
+    subject: "Social Studies",
+    content: JSON.stringify({
+      gameType: "eco-missions",
+      habitats: ["Nyungwe forest", "Lake Kivu", "Akagera Savannah"],
+      missions: ["clean rivers", "protect gorillas", "plant trees"],
+      rewards: ["eco-badges", "team trophies", "secret postcards"]
+    }),
+    instructions: "Choose missions, solve problems, and earn eco-badges together!",
+    learningObjectives: "Environmental stewardship, teamwork, decision making",
+    estimatedTime: 30,
+    pointsReward: 55,
+    badgeReward: "Eco Ranger",
+    isActive: true
+  },
+  {
+    title: "Imigongo Puzzle Studio",
+    description: "Arrange traditional Imigongo patterns to unlock secret color stories",
+    grade: "Grade 4",
+    ageGroup: "9-10",
+    gameType: "puzzle",
+    difficulty: "intermediate",
+    subject: "Art",
+    content: JSON.stringify({
+      gameType: "pattern-puzzle",
+      puzzles: ["spiral", "chevron", "zigzag"],
+      tools: ["rotate", "flip", "mirror"],
+      bonuses: ["speed streak", "perfect pattern", "color harmony"]
+    }),
+    instructions: "Drag tiles to rebuild Imigongo designs before the drum beats stop!",
+    learningObjectives: "Cultural appreciation, spatial reasoning, pattern fluency",
+    estimatedTime: 20,
+    pointsReward: 50,
+    badgeReward: "Pattern Maestro",
+    isActive: true
+  },
 
   // ===== GRADE 5 (Ages 10-11) - Upper Elementary =====
   {
@@ -419,6 +504,90 @@ const sampleGamifiedContent = [
     estimatedTime: 30,
     pointsReward: 55,
     badgeReward: "Ecosystem Expert",
+    isActive: true
+  },
+  {
+    title: "STEM Drone Challenge",
+    description: "Program delivery drones to help communities reach remote clinics",
+    grade: "Grade 5",
+    ageGroup: "10-11",
+    gameType: "simulation",
+    difficulty: "advanced",
+    subject: "Science",
+    content: JSON.stringify({
+      gameType: "drone-programming",
+      missions: ["deliver medicine", "map flooding", "measure rainfall"],
+      codingBlocks: ["turn", "tilt", "scan", "drop"],
+      hazards: ["strong wind", "hippo crossing", "power lines"]
+    }),
+    instructions: "Design smart flight plans and adapt when surprises happen!",
+    learningObjectives: "Applied coding, critical thinking, STEM careers awareness",
+    estimatedTime: 32,
+    pointsReward: 68,
+    badgeReward: "STEM Pilot",
+    isActive: true
+  },
+  {
+    title: "Kigali Innovation Fair",
+    description: "Build futuristic inventions and pitch them to friendly judges",
+    grade: "Grade 5",
+    ageGroup: "10-11",
+    gameType: "creative",
+    difficulty: "intermediate",
+    subject: "Art",
+    content: JSON.stringify({
+      gameType: "innovation-builder",
+      prototypes: ["smart water filter", "solar backpack", "robot helper"],
+      miniGames: ["brainstorm", "sketch", "prototype", "presentation"],
+      judges: ["engineer", "artist", "community leader"]
+    }),
+    instructions: "Complete mini challenges to wow the judges and unlock fireworks!",
+    learningObjectives: "Design thinking, presentation skills, creativity",
+    estimatedTime: 36,
+    pointsReward: 62,
+    badgeReward: "Innovation Star",
+    isActive: true
+  },
+  {
+    title: "Mystery Math Escape Room",
+    description: "Solve multi-step math puzzles to unlock each escape chamber",
+    grade: "Grade 5",
+    ageGroup: "10-11",
+    gameType: "puzzle",
+    difficulty: "advanced",
+    subject: "Math",
+    content: JSON.stringify({
+      gameType: "math-escape",
+      chambers: ["fraction vault", "decimal lab", "geometry maze"],
+      tools: ["laser protractor", "fraction flashlight", "code wheel"],
+      boss: "Professor Confusion"
+    }),
+    instructions: "Break codes, balance equations, and beat Professor Confusion!",
+    learningObjectives: "Problem solving, algebra readiness, math fluency",
+    estimatedTime: 34,
+    pointsReward: 70,
+    badgeReward: "Escape Artist",
+    isActive: true
+  },
+  {
+    title: "Lake Kivu Puzzle Quest",
+    description: "Balance boats, fish, and fuel in tricky lake-side brain teasers",
+    grade: "Grade 5",
+    ageGroup: "10-11",
+    gameType: "puzzle",
+    difficulty: "advanced",
+    subject: "Math",
+    content: JSON.stringify({
+      gameType: "resource-puzzle",
+      levels: ["boat balance", "market math", "eco rescue"],
+      constraints: ["limited fuel", "storm timer", "tricky traders"],
+      helpers: ["captain", "scientist", "merchant"]
+    }),
+    instructions: "Solve each challenge by planning ahead and keeping the lake healthy!",
+    learningObjectives: "Multi-step reasoning, fractions in context, decision making",
+    estimatedTime: 28,
+    pointsReward: 66,
+    badgeReward: "Lake Hero",
     isActive: true
   },
 
@@ -506,6 +675,90 @@ const sampleGamifiedContent = [
     estimatedTime: 40,
     pointsReward: 70,
     badgeReward: "History Builder",
+    isActive: true
+  },
+  {
+    title: "Robotics Logic Lab",
+    description: "Program quirky robots to complete missions at the Kigali Tech Expo",
+    grade: "Grade 6",
+    ageGroup: "11-12",
+    gameType: "simulation",
+    difficulty: "advanced",
+    subject: "Digital Literacy",
+    content: JSON.stringify({
+      gameType: "robotics",
+      robots: ["helper bot", "guard bot", "music bot"],
+      logicBlocks: ["if", "repeat", "detect", "celebrate"],
+      missions: ["sort recycling", "guard artifacts", "dance show"]
+    }),
+    instructions: "Arrange logic blocks, test your bot, and fix silly bugs!",
+    learningObjectives: "Algorithmic thinking, debugging, STEM exploration",
+    estimatedTime: 38,
+    pointsReward: 78,
+    badgeReward: "Robot Maestro",
+    isActive: true
+  },
+  {
+    title: "Space Colony Planner",
+    description: "Design a sustainable moon colony for future Rwandan astronauts",
+    grade: "Grade 6",
+    ageGroup: "11-12",
+    gameType: "interactive",
+    difficulty: "advanced",
+    subject: "Science",
+    content: JSON.stringify({
+      gameType: "space-planner",
+      resources: ["solar power", "oxygen garden", "water recycler"],
+      challenges: ["meteor storm", "dust blackout", "team conflict"],
+      crew: ["botanist", "pilot", "doctor", "engineer"]
+    }),
+    instructions: "Balance resources, solve crises, and keep your crew smiling!",
+    learningObjectives: "Systems thinking, resource management, collaboration",
+    estimatedTime: 40,
+    pointsReward: 82,
+    badgeReward: "Space Architect",
+    isActive: true
+  },
+  {
+    title: "African History Time Travelers",
+    description: "Hop through iconic African eras to collect legendary artifacts",
+    grade: "Grade 6",
+    ageGroup: "11-12",
+    gameType: "story",
+    difficulty: "advanced",
+    subject: "Social Studies",
+    content: JSON.stringify({
+      gameType: "history-adventure",
+      eras: ["Kingdom of Rwanda", "Mali Empire", "Great Zimbabwe"],
+      artifacts: ["drum of unity", "scholar's scroll", "trading coin"],
+      dilemmas: ["choose ambassador", "solve trade dispute", "decode drum pattern"]
+    }),
+    instructions: "Make smart choices, learn legendary facts, and return home a hero!",
+    learningObjectives: "African history appreciation, critical thinking, empathy",
+    estimatedTime: 37,
+    pointsReward: 76,
+    badgeReward: "Time Traveler",
+    isActive: true
+  },
+  {
+    title: "Logic Circuit Challenge",
+    description: "Wire logic gates to power a smart city in Kigali",
+    grade: "Grade 6",
+    ageGroup: "11-12",
+    gameType: "puzzle",
+    difficulty: "advanced",
+    subject: "Digital Literacy",
+    content: JSON.stringify({
+      gameType: "logic-puzzle",
+      gates: ["AND", "OR", "NOT", "XOR"],
+      missions: ["street lights", "water pumps", "security drones"],
+      challenges: ["limited wires", "energy cap", "unexpected surge"]
+    }),
+    instructions: "Snap gates together, test the circuit, and keep the smart city shining!",
+    learningObjectives: "Logic reasoning, computer science foundations, troubleshooting",
+    estimatedTime: 33,
+    pointsReward: 74,
+    badgeReward: "Circuit Commander",
     isActive: true
   },
 

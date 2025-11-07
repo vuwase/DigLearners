@@ -52,6 +52,17 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(50),
       allowNull: true
     },
+    pointsReward: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 10,
+      field: 'points_reward'
+    },
+    badgeReward: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      field: 'badge_reward'
+    },
     teacherId: {
       type: DataTypes.INTEGER,
       allowNull: true,

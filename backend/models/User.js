@@ -89,6 +89,11 @@ module.exports = (sequelize) => {
         max: 18
       }
     },
+    school: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      field: 'school'
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,

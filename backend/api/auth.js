@@ -237,14 +237,14 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Handle student login (question-based)
-    if (loginType === 'student' || (!loginType && fullName && grade && registrationCode)) {
-      // Validate input for student login
-      if (!fullName || !grade || !registrationCode) {
+    // Handle student login (registration code only - simplified for kids)
+    if (loginType === 'student' || (!loginType && registrationCode && !email)) {
+      // Validate input for student login - now only registration code is required
+      if (!registrationCode) {
         return res.status(400).json({
           success: false,
-          error: 'Name, grade, and registration code are required for student login',
-          errorType: 'missing_student_info'
+          error: 'Registration code is required for student login',
+          errorType: 'missing_registration_code'
         });
       }
 
@@ -258,71 +258,66 @@ router.post('/login', async (req, res) => {
         });
       }
 
-      // Normalize grade format - handle both "Grade X" and "X" formats
-      let normalizedGrade = grade.trim();
-      if (normalizedGrade.startsWith('Grade ')) {
-        normalizedGrade = normalizedGrade.replace('Grade ', '').trim();
-      }
-
-      console.log('[Login] Searching for student:', {
-        registrationCode: registrationCode.toUpperCase(),
-        fullName: fullName.trim(),
-        grade: normalizedGrade,
-        originalGrade: grade
+      console.log('[Login] Searching for student by registration code:', {
+        registrationCode: registrationCode.toUpperCase()
       });
 
-      // Find student by registration code, name, and grade
-      // Try exact match first, then try with normalized grade
+      // Find student by registration code only (simplified for kids)
       let user = await User.findOne({
         where: {
           registrationCode: registrationCode.toUpperCase(),
-          fullName: fullName.trim(),
-          grade: normalizedGrade,
           role: 'learner'
         }
       });
 
-      // If not found with normalized grade, try with original grade
-      if (!user && normalizedGrade !== grade.trim()) {
-        user = await User.findOne({
-          where: {
-            registrationCode: registrationCode.toUpperCase(),
-            fullName: fullName.trim(),
-            grade: grade.trim(),
-            role: 'learner'
-          }
-        });
-      }
+      // If name and grade are provided, use them for additional verification (optional)
+      if (!user && fullName && grade) {
+        // Normalize grade format - handle both "Grade X" and "X" formats
+        let normalizedGrade = grade.trim();
+        if (normalizedGrade.startsWith('Grade ')) {
+          normalizedGrade = normalizedGrade.replace('Grade ', '').trim();
+        }
 
-      if (!user) {
-        // Log what we searched for to help debug
-        console.log('[Login] Student not found. Searched with:', {
+        console.log('[Login] Trying with name and grade:', {
           registrationCode: registrationCode.toUpperCase(),
           fullName: fullName.trim(),
           grade: normalizedGrade
         });
-        
-        // Also check if any students exist with this registration code to help debug
-        const codeCheck = await User.findOne({
+
+        // Try finding with name and grade as additional verification
+        user = await User.findOne({
           where: {
             registrationCode: registrationCode.toUpperCase(),
+            fullName: fullName.trim(),
+            grade: normalizedGrade,
             role: 'learner'
-          },
-          attributes: ['id', 'fullName', 'grade', 'registrationCode']
+          }
         });
-        
-        if (codeCheck) {
-          console.log('[Login] Found student with this code but different name/grade:', {
-            foundName: codeCheck.fullName,
-            foundGrade: codeCheck.grade,
-            searchedName: fullName.trim(),
-            searchedGrade: normalizedGrade
+
+        // If not found with normalized grade, try with original grade
+        if (!user && normalizedGrade !== grade.trim()) {
+          user = await User.findOne({
+            where: {
+              registrationCode: registrationCode.toUpperCase(),
+              fullName: fullName.trim(),
+              grade: grade.trim(),
+              role: 'learner'
+            }
           });
         }
+      }
+
+      if (!user) {
+        // Log what we searched for to help debug
+        console.log('[Login] Student not found with registration code:', {
+          registrationCode: registrationCode.toUpperCase(),
+          alsoSearchedWithName: !!fullName,
+          alsoSearchedWithGrade: !!grade
+        });
         
         return res.status(401).json({
           success: false,
-          error: 'No student found with these details. Please check your name, grade, and registration code.',
+          error: 'No student found with this registration code. Please check your registration code and try again.',
           errorType: 'student_not_found'
         });
       }

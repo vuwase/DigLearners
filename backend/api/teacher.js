@@ -41,7 +41,7 @@ router.get('/analytics/test', async (req, res) => {
 // Register a student (teacher creates registration code)
 router.post('/register-student', authenticateToken, requireTeacher, async (req, res) => {
   try {
-    const { fullName, grade, age } = req.body;
+    const { fullName, grade, age, school } = req.body;
 
     // Validate input
     if (!fullName || !grade) {
@@ -59,7 +59,8 @@ router.post('/register-student', authenticateToken, requireTeacher, async (req, 
       fullName,
       role: 'learner',
       grade,
-      age: age || null,
+      age: age || null, // Age is optional
+      school: school || null, // School is optional but recommended
       registrationCode,
       // No email or password required - student will login with registration code
     });
@@ -72,6 +73,7 @@ router.post('/register-student', authenticateToken, requireTeacher, async (req, 
         fullName: student.fullName,
         grade: student.grade,
         age: student.age,
+        school: student.school,
         role: student.role,
         registrationCode: student.registrationCode
       }
@@ -94,7 +96,7 @@ router.get('/my-students', authenticateToken, requireTeacher, async (req, res) =
         role: 'learner',
         registrationCode: { [Op.not]: null }
       },
-      attributes: ['id', 'fullName', 'grade', 'age', 'registrationCode', 'totalPoints', 'createdAt'],
+      attributes: ['id', 'fullName', 'grade', 'age', 'school', 'registrationCode', 'totalPoints', 'createdAt'],
       order: [['createdAt', 'DESC']]
     });
 
