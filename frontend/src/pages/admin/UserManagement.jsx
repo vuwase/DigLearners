@@ -7,6 +7,7 @@ import './AdminPages.css';
 const UserManagement = () => {
   const { t } = useTranslation();
   const [users, setUsers] = useState([]);
+  const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,26 +32,42 @@ const UserManagement = () => {
     try {
       setLoading(true);
       const response = await adminApiService.getUsers();
-      if (response.data) {
-        setUsers(response.data);
-      } else {
-        setUsers([]);
-      }
+      const usersData = response.users
+        || response.data?.users
+        || (Array.isArray(response.data) ? response.data : [])
+        || [];
+
+      const normalizedUsers = usersData.map(user => {
+        const isActive = user.isActive !== false;
+        return {
+          ...user,
+          status: user.status || (isActive ? 'active' : 'inactive'),
+          progress: typeof user.progress === 'number' ? user.progress : 0,
+          lastActive: user.lastActive || user.updatedAt || user.createdAt || null,
+          isActive
+        };
+      });
+
+      setUsers(normalizedUsers);
+      setPagination(response.pagination || response.data?.pagination || null);
     } catch (err) {
       console.error('Error fetching users:', err);
       setError(err.message);
       setUsers([]);
+      setPagination(null);
     } finally {
       setLoading(false);
     }
   };
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = (user.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (user.email || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      (user.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || (user.isActive !== false ? 'active' : 'inactive') === statusFilter;
-    
+    const userStatus = user.isActive !== false ? 'active' : 'inactive';
+    const matchesStatus = statusFilter === 'all' || userStatus === statusFilter;
+
     return matchesSearch && matchesRole && matchesStatus;
   });
 
@@ -352,7 +369,7 @@ const UserManagement = () => {
             <Icon name="check" size={24} />
           </div>
           <div className="stat-content">
-            <div className="stat-number">{users.filter(u => u.status === 'active').length}</div>
+            <div className="stat-number">{users.filter(u => u.isActive !== false).length}</div>
             <div className="stat-label">Active Users</div>
           </div>
         </div>
@@ -431,7 +448,7 @@ const UserManagement = () => {
                     <span className="progress-text">{user.progress}%</span>
                   </div>
                 </td>
-                <td>{new Date(user.lastActive).toLocaleDateString()}</td>
+                <td>{user.lastActive ? new Date(user.lastActive).toLocaleDateString() : 'N/A'}</td>
                 <td>
                   <div className="action-buttons">
                     <button className="btn-icon" title="Edit User">
@@ -458,7 +475,7 @@ const UserManagement = () => {
           Previous
         </button>
         <span className="pagination-info">
-          Showing 1-{filteredUsers.length} of {users.length} users
+          Showing {filteredUsers.length > 0 ? 1 : 0}-{filteredUsers.length} of {pagination?.total ?? users.length} users
         </span>
         <button className="btn-secondary">
           Next

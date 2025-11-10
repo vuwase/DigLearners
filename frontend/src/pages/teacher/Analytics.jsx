@@ -19,11 +19,28 @@ const Analytics = () => {
     try {
       setLoading(true);
       const response = await teacherApiService.getAnalytics();
-      setAnalyticsData(response.data);
+      const analytics = response.data || response || {};
+      const defaultOverview = {
+        totalStudents: 0,
+        activeStudents: 0,
+        totalLessons: 0,
+        completedLessons: 0,
+        averageScore: 0,
+        totalAssignments: 0,
+        submittedAssignments: 0
+      };
+      const normalized = {
+        overview: { ...defaultOverview, ...(analytics.overview || {}) },
+        weeklyActivity: analytics.weeklyActivity || [],
+        studentProgress: analytics.studentProgress || analytics.students || [],
+        topPerformers: analytics.topPerformers || [],
+        needsAttention: analytics.needsAttention || [],
+        performance: analytics.performance || { subjectPerformance: [], gradeDistribution: [], progressTrends: [] }
+      };
+      setAnalyticsData(normalized);
     } catch (err) {
       console.error('Error fetching analytics:', err);
       setError(err.message);
-      // Set fallback data
       setAnalyticsData({
         overview: {
           totalStudents: 0,
@@ -34,7 +51,10 @@ const Analytics = () => {
           totalAssignments: 0,
           submittedAssignments: 0
         },
-        students: [],
+        weeklyActivity: [],
+        studentProgress: [],
+        topPerformers: [],
+        needsAttention: [],
         performance: {
           subjectPerformance: [],
           gradeDistribution: [],

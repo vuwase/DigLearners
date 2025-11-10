@@ -164,6 +164,24 @@ const LearnerDashboard = () => {
         <p>Choose what you want to do! 🚀</p>
       </div>
 
+      <div className="simple-stats">
+        <div className="stat-chip">
+          <span className="chip-icon">⭐</span>
+          <span className="chip-label">Points</span>
+          <span className="chip-value">{userStats.totalPoints}</span>
+        </div>
+        <div className="stat-chip">
+          <span className="chip-icon">🏆</span>
+          <span className="chip-label">Badges</span>
+          <span className="chip-value">{userStats.badgesEarned}</span>
+        </div>
+        <div className="stat-chip">
+          <span className="chip-icon">🎮</span>
+          <span className="chip-label">Games Done</span>
+          <span className="chip-value">{userStats.gamesCompleted}</span>
+        </div>
+      </div>
+
       {/* Quick Actions */}
       <div className="quick-actions">
         <button 
@@ -367,6 +385,51 @@ const LearnerDashboard = () => {
             text-align: center;
           }
 
+          .simple-stats {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2.5rem;
+          }
+
+          .stat-chip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.25);
+            border-radius: 18px;
+            padding: 1rem 1.5rem;
+            min-width: 130px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.35);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+          }
+
+          .stat-chip:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 18px 35px rgba(0,0,0,0.28);
+          }
+
+          .chip-icon {
+            font-size: 2rem;
+          }
+
+          .chip-label {
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            opacity: 0.85;
+          }
+
+          .chip-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+          }
+
           .simple-badges h2 {
             color: white;
             font-size: 2rem;
@@ -458,6 +521,15 @@ const LearnerDashboard = () => {
 
             .simple-welcome h1 {
               font-size: 2.5rem;
+            }
+
+            .simple-stats {
+              gap: 1rem;
+            }
+
+            .stat-chip {
+              min-width: 100px;
+              padding: 0.85rem 1rem;
             }
 
             .games-grid {

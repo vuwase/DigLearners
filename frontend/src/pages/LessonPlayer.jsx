@@ -52,10 +52,11 @@ export default function LessonPlayer() {
         const progressPercentage = 100
         
         // Use the progress endpoint which will check for and award badges
-        const response = await learnerApiService.updateProgress(lesson.id, {
-          score: score,
+        const response = await learnerApiService.submitLessonProgress({
+          lessonId: lesson.id,
+          score,
           timeSpent: results.timeSpent || 0,
-          progressPercentage: progressPercentage,
+          progressPercentage,
           isCompleted: true
         }).catch(err => {
           console.warn('[LessonPlayer] Failed to save progress to backend:', err)

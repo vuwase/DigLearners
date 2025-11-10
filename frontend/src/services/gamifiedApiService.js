@@ -88,6 +88,13 @@ class GamifiedApiService {
     return this.makeRequest('/gamified/my-content');
   }
 
+  async saveProgress(progressData) {
+    return this.makeRequest('/gamified/progress', {
+      method: 'POST',
+      body: JSON.stringify(progressData)
+    });
+  }
+
   // Create new gamified content (admin/teacher only)
   async createContent(contentData) {
     return this.makeRequest('/gamified/create', {

@@ -17,6 +17,17 @@ const Lessons = () => {
     fetchLessons();
   }, [filterSubject, filterStatus]);
 
+  const parseArrayField = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  };
+
   const fetchLessons = async () => {
     try {
       setLoading(true);
@@ -24,9 +35,11 @@ const Lessons = () => {
         subject: filterSubject,
         status: filterStatus
       });
-      setLessons(response.lessons);
-      if (response.lessons.length > 0 && !selectedLesson) {
-        setSelectedLesson(response.lessons[0].id);
+      const lessonsData = response.lessons || response.data?.lessons || response.data || [];
+      const normalizedLessons = Array.isArray(lessonsData) ? lessonsData : [];
+      setLessons(normalizedLessons);
+      if (normalizedLessons.length > 0 && !selectedLesson) {
+        setSelectedLesson(normalizedLessons[0].id);
       }
     } catch (err) {
       console.error('Error fetching lessons:', err);
@@ -232,7 +245,7 @@ const Lessons = () => {
                   <span className="meta-label">
                     {currentLanguage === 'rw' ? 'Igihe:' : 'Duration:'}
                   </span>
-                  <span className="meta-value">{lesson.duration}</span>
+                  <span className="meta-value">{lesson.duration || `${lesson.estimatedDuration || 0} min`}</span>
                 </div>
                 <div className="meta-item">
                   <span className="meta-label">
@@ -249,7 +262,7 @@ const Lessons = () => {
                   <span className="meta-label">
                     {currentLanguage === 'rw' ? 'Abanyeshuri:' : 'Students:'}
                   </span>
-                  <span className="meta-value">{lesson.studentsCompleted}/{lesson.totalStudents}</span>
+                  <span className="meta-value">{lesson.studentsCompleted || 0}/{lesson.totalStudents || 0}</span>
                 </div>
                 {lesson.averageScore > 0 && (
                   <div className="meta-item">
@@ -265,11 +278,11 @@ const Lessons = () => {
                 <div className="progress-bar">
                   <div 
                     className="progress-fill" 
-                    style={{ width: `${(lesson.studentsCompleted / lesson.totalStudents) * 100}%` }}
+                    style={{ width: `${lesson.totalStudents ? Math.min(100, (lesson.studentsCompleted || 0) / lesson.totalStudents * 100) : 0}%` }}
                   ></div>
                 </div>
                 <span className="progress-text">
-                  {lesson.studentsCompleted}/{lesson.totalStudents} {currentLanguage === 'rw' ? 'yarangije' : 'completed'}
+                  {lesson.studentsCompleted || 0}/{lesson.totalStudents || 0} {currentLanguage === 'rw' ? 'yarangije' : 'completed'}
                 </span>
                 </div>
             </div>
@@ -286,7 +299,7 @@ const Lessons = () => {
                 <div className="lesson-meta-detail">
                   <span>
                     <Icon name="clock" size={16} style={{ marginRight: '4px' }} />
-                    {currentLesson.duration}
+                    {currentLesson.duration || `${currentLesson.estimatedDuration || 0} min`}
                   </span>
                   <span>
                     <Icon name="analytics" size={16} style={{ marginRight: '4px' }} />
@@ -317,12 +330,7 @@ const Lessons = () => {
                   {currentLanguage === 'rw' ? 'Intego' : 'Learning Objectives'}
                 </h3>
                 <ul>
-                  {(currentLesson.objectives ? 
-                    (typeof currentLesson.objectives === 'string' ? 
-                      JSON.parse(currentLesson.objectives) : 
-                      currentLesson.objectives) : 
-                    []
-                  ).map((objective, index) => (
+                  {parseArrayField(currentLesson.objectives).map((objective, index) => (
                     <li key={index}>
                       <Icon name="target" size={16} style={{ marginRight: '8px' }} />
                       {objective}
@@ -336,12 +344,7 @@ const Lessons = () => {
                   {currentLanguage === 'rw' ? 'Ibikoresho' : 'Resources'}
                 </h3>
                 <ul>
-                  {(currentLesson.resources ? 
-                    (typeof currentLesson.resources === 'string' ? 
-                      JSON.parse(currentLesson.resources) : 
-                      currentLesson.resources) : 
-                    []
-                  ).map((resource, index) => (
+                  {parseArrayField(currentLesson.resources).map((resource, index) => (
                     <li key={index}>
                       <Icon name="book" size={16} style={{ marginRight: '8px' }} />
                       {resource}
@@ -359,19 +362,19 @@ const Lessons = () => {
                     <span className="stat-label">
                       {currentLanguage === 'rw' ? 'Abanyeshuri yarangije:' : 'Students completed:'}
                     </span>
-                    <span className="stat-value">{currentLesson.studentsCompleted}/{currentLesson.totalStudents}</span>
+                    <span className="stat-value">{currentLesson.studentsCompleted || 0}/{currentLesson.totalStudents || 0}</span>
                   </div>
                   <div className="performance-stat">
                     <span className="stat-label">
                       {currentLanguage === 'rw' ? 'Incamake ryose:' : 'Average score:'}
                     </span>
-                    <span className="stat-value">{currentLesson.averageScore}%</span>
+                    <span className="stat-value">{currentLesson.averageScore ?? 0}%</span>
                   </div>
                   <div className="performance-stat">
                     <span className="stat-label">
                       {currentLanguage === 'rw' ? 'Igihe cyakoresheje:' : 'Time spent:'}
                     </span>
-                    <span className="stat-value">{currentLesson.duration}</span>
+                    <span className="stat-value">{currentLesson.duration || `${currentLesson.estimatedDuration || 0} min`}</span>
                   </div>
                 </div>
               </div>

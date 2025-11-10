@@ -35,15 +35,28 @@ const Assignments = () => {
     fetchAssignments();
   }, [filterStatus]);
 
+  const parseArrayField = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  };
+
   const fetchAssignments = async () => {
     try {
       setLoading(true);
       const response = await teacherApiService.getAssignments({
         status: filterStatus
       });
-      setAssignments(response.assignments);
-      if (response.assignments.length > 0 && !selectedAssignment) {
-        setSelectedAssignment(response.assignments[0].id);
+      const assignmentsData = response.assignments || response.data?.assignments || response.data || [];
+      const normalizedAssignments = Array.isArray(assignmentsData) ? assignmentsData : [];
+      setAssignments(normalizedAssignments);
+      if (normalizedAssignments.length > 0 && !selectedAssignment) {
+        setSelectedAssignment(normalizedAssignments[0].id);
       }
     } catch (err) {
       console.error('Error fetching assignments:', err);
@@ -258,7 +271,7 @@ const Assignments = () => {
               </div>
             ) : (
               filteredAssignments.map((assignment) => {
-            const dueStatus = getDueDateStatus(assignment.dueDate);
+            const dueStatus = assignment.dueDate ? getDueDateStatus(assignment.dueDate) : { status: 'upcoming', text: currentLanguage === 'rw' ? 'Bitegereje' : 'Upcoming', color: '#4CAF50' };
             return (
               <div 
                 key={assignment.id} 
@@ -267,8 +280,8 @@ const Assignments = () => {
               >
                 <div className="assignment-header">
                   <div className="assignment-title">
-                    <h4>{assignment.title}</h4>
-                    <p>{assignment.class}</p>
+                    <h4>{assignment.title || 'Untitled Assignment'}</h4>
+                    <p>{assignment.class || assignment.grade || 'No class assigned'}</p>
                   </div>
                   <div className="assignment-status">
                     <span 
@@ -291,26 +304,26 @@ const Assignments = () => {
                     <span className="meta-label">
                       {currentLanguage === 'rw' ? 'Igihe cyo gusubira:' : 'Due Date:'}
                     </span>
-                    <span className="meta-value">{new Date(assignment.dueDate).toLocaleDateString()}</span>
+                    <span className="meta-value">{assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : '—'}</span>
                   </div>
                   <div className="meta-item">
                     <span className="meta-label">
                       {currentLanguage === 'rw' ? 'Abanyeshuri:' : 'Students:'}
                     </span>
-                    <span className="meta-value">{assignment.submitted}/{assignment.totalStudents}</span>
+                    <span className="meta-value">{assignment.submitted || 0}/{assignment.totalStudents || 0}</span>
                   </div>
                   <div className="meta-item">
                     <span className="meta-label">
                       {currentLanguage === 'rw' ? 'Yatangijwe:' : 'Graded:'}
                     </span>
-                    <span className="meta-value">{assignment.graded}/{assignment.submitted}</span>
+                    <span className="meta-value">{assignment.graded || 0}/{assignment.submitted || 0}</span>
                   </div>
                   {assignment.averageScore > 0 && (
                     <div className="meta-item">
                       <span className="meta-label">
                         {currentLanguage === 'rw' ? 'Incamake ryose:' : 'Average Score:'}
                       </span>
-                      <span className="meta-value">{assignment.averageScore}%</span>
+                      <span className="meta-value">{assignment.averageScore ?? 0}%</span>
                     </div>
                   )}
                 </div>
@@ -318,12 +331,12 @@ const Assignments = () => {
                 <div className="assignment-progress">
                   <div className="progress-bar">
                     <div 
-                      className="progress-fill" 
-                      style={{ width: `${(assignment.submitted / assignment.totalStudents) * 100}%` }}
+                    className="progress-fill" 
+                    style={{ width: `${assignment.totalStudents ? Math.min(100, (assignment.submitted || 0) / assignment.totalStudents * 100) : 0}%` }}
                     ></div>
                   </div>
                   <span className="progress-text">
-                    {assignment.submitted}/{assignment.totalStudents} {currentLanguage === 'rw' ? 'yatangije' : 'submitted'}
+                    {assignment.submitted || 0}/{assignment.totalStudents || 0} {currentLanguage === 'rw' ? 'yatangije' : 'submitted'}
                   </span>
                 </div>
               </div>
@@ -339,7 +352,7 @@ const Assignments = () => {
             <div className="assignment-detail-header">
               <div className="assignment-info">
                 <h2>{currentAssignment.title || 'Untitled Assignment'}</h2>
-                <p>{currentAssignment.class || 'No class assigned'}</p>
+                <p>{currentAssignment.class || currentAssignment.grade || 'No class assigned'}</p>
                 <div className="assignment-meta-detail">
                   <span>
                     <Icon name="calendar" size={16} style={{ marginRight: '4px' }} />
@@ -381,7 +394,7 @@ const Assignments = () => {
                   {currentLanguage === 'rw' ? 'Amabwiriza' : 'Instructions'}
                 </h3>
                 <ol>
-                  {(currentAssignment.instructions || []).map((instruction, index) => (
+                  {parseArrayField(currentAssignment.instructions).map((instruction, index) => (
                     <li key={index}>{instruction}</li>
                   ))}
                 </ol>
@@ -392,7 +405,7 @@ const Assignments = () => {
                   {currentLanguage === 'rw' ? 'Ibyatangijwe' : 'Submissions'}
                 </h3>
                 <div className="submissions-list">
-                  {(currentAssignment.submissions || []).map((submission, index) => (
+                  {parseArrayField(currentAssignment.submissions).map((submission, index) => (
                     <div key={index} className="submission-item">
                       <div className="submission-header">
                         <span className="student-name">{submission.studentName}</span>

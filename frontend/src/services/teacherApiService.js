@@ -162,11 +162,6 @@ class TeacherApiService {
     });
   }
 
-  // Get all students
-  async getStudents() {
-    return this.makeRequest('/teacher/students');
-  }
-
   // Register a new student (teacher creates registration code)
   async registerStudent(studentData) {
     return this.makeRequest('/teacher/register-student', {

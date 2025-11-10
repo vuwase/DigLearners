@@ -24,8 +24,9 @@ const StudentRegistration = () => {
   const fetchStudents = async () => {
     try {
       setLoadingStudents(true);
-      const response = await teacherApiService.makeRequest('/teacher/my-students');
-      setStudents(response.data || []);
+      const response = await teacherApiService.getMyStudents();
+      const studentList = response.data || response.students || [];
+      setStudents(Array.isArray(studentList) ? studentList : []);
     } catch (error) {
       console.error('Error fetching students:', error);
     } finally {
@@ -47,14 +48,11 @@ const StudentRegistration = () => {
     setSuccess(null);
 
     try {
-      const response = await teacherApiService.makeRequest('/teacher/register-student', {
-        method: 'POST',
-          body: JSON.stringify({
-          fullName: formData.fullName.trim(),
-          grade: formData.grade,
-          age: formData.age ? parseInt(formData.age) : null,
-          school: formData.school === 'other' ? (formData.otherSchool || null) : (formData.school || null)
-        })
+      const response = await teacherApiService.registerStudent({
+        fullName: formData.fullName.trim(),
+        grade: formData.grade,
+        age: formData.age ? parseInt(formData.age) : null,
+        school: formData.school === 'other' ? (formData.otherSchool || null) : (formData.school || null)
       });
 
       if (response.success) {

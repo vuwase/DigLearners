@@ -22,9 +22,11 @@ const Students = () => {
     try {
       setLoading(true);
       const response = await teacherApiService.getStudents();
-      setStudents(response.data || []);
-      if (response.data && response.data.length > 0) {
-        setSelectedStudent(response.data[0].id);
+      const studentList = response.students || response.data || [];
+      const normalizedStudents = Array.isArray(studentList) ? studentList : [];
+      setStudents(normalizedStudents);
+      if (normalizedStudents.length > 0) {
+        setSelectedStudent(normalizedStudents[0].id);
       }
     } catch (err) {
       console.error('Error fetching students:', err);
@@ -167,15 +169,15 @@ const Students = () => {
             >
               <div className="student-header">
                 <div className="student-avatar">
-                  {student.fullName ? student.fullName.charAt(0).toUpperCase() : '👤'}
+                  {(student.fullName || student.name || '👤').charAt(0).toUpperCase()}
                 </div>
                 <div className="student-info">
-                  <h4>{student.fullName || 'Unknown Student'}</h4>
+                  <h4>{student.fullName || student.name || 'Unknown Student'}</h4>
                   <p>{student.grade || 'No Grade'} • {student.email || 'No Email'}</p>
                 </div>
                 <div className="student-progress">
                   <span className="progress-percentage">
-                    {Math.round((student.totalPoints || 0) / 1000 * 100)}%
+                    {Math.round(((student.totalPoints || 0) / 1000) * 100)}%
                   </span>
                 </div>
               </div>
@@ -231,10 +233,10 @@ const Students = () => {
             <div className="student-detail-header">
               <div className="student-info">
                 <div className="student-avatar-large">
-                  {currentStudent.fullName ? currentStudent.fullName.charAt(0).toUpperCase() : '👤'}
+                  {(currentStudent.fullName || currentStudent.name || '👤').charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h2>{currentStudent.fullName || 'Unknown Student'}</h2>
+                  <h2>{currentStudent.fullName || currentStudent.name || 'Unknown Student'}</h2>
                   <p>{currentStudent.grade || 'No Grade'} • {currentStudent.email || 'No Email'}</p>
                   <p>
                     {currentLanguage === 'rw' ? 'Age:' : 'Age:'} {currentStudent.age || 'Unknown'}

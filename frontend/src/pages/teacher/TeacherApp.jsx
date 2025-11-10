@@ -10,12 +10,6 @@ import Assignments from './Assignments'
 import Analytics from './Analytics'
 import Schedule from './Schedule'
 import StudentRegistration from './StudentRegistration'
-// Admin features now available within TeacherApp
-import AdminDashboard from '../admin/AdminDashboard'
-import UserManagement from '../admin/UserManagement'
-import ContentManagement from '../admin/ContentManagement'
-import AdminSettings from '../admin/Settings'
-import AdminReports from '../admin/Reports'
 
 const TeacherApp = () => {
   const { user, logout, loading } = useAuth()
@@ -61,13 +55,6 @@ const TeacherApp = () => {
         <Route path="/assignments" element={<Assignments />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/schedule" element={<Schedule />} />
-        {/* Admin routes embedded for teachers/admins */}
-        <Route path="/users" element={<UserManagement />} />
-        <Route path="/content" element={<ContentManagement />} />
-        <Route path="/settings" element={<AdminSettings />} />
-        <Route path="/reports" element={<AdminReports />} />
-        {/* Optional: admin dashboard entry under teacher shell */}
-        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </AppLayout>

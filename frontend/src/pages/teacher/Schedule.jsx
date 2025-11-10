@@ -26,8 +26,12 @@ const Schedule = () => {
         teacherApiService.getAssignments().catch(() => ({ assignments: [] }))
       ]);
 
-      const lessons = lessonsResponse.lessons || [];
-      const assignments = assignmentsResponse.assignments || [];
+      const lessons = Array.isArray(lessonsResponse.lessons || lessonsResponse.data?.lessons || lessonsResponse.data)
+        ? (lessonsResponse.lessons || lessonsResponse.data?.lessons || lessonsResponse.data)
+        : [];
+      const assignments = Array.isArray(assignmentsResponse.assignments || assignmentsResponse.data?.assignments || assignmentsResponse.data)
+        ? (assignmentsResponse.assignments || assignmentsResponse.data?.assignments || assignmentsResponse.data)
+        : [];
 
       // Create schedule items from lessons and assignments
       const scheduleItems = [
@@ -35,7 +39,7 @@ const Schedule = () => {
           id: `lesson-${lesson.id}`,
           title: lesson.title,
           type: 'lesson',
-          date: lesson.createdAt,
+          date: lesson.createdAt || lesson.updatedAt || new Date().toISOString(),
           time: '09:00',
           status: 'scheduled',
           description: lesson.description,
@@ -44,13 +48,22 @@ const Schedule = () => {
           duration: `${lesson.estimatedDuration || 30} minutes`,
           classroom: 'Virtual Classroom',
           students: lesson.totalStudents || 0,
-          objectives: lesson.objectives ? JSON.parse(lesson.objectives) : []
+          objectives: (() => {
+            if (!lesson.objectives) return [];
+            if (Array.isArray(lesson.objectives)) return lesson.objectives;
+            try {
+              const parsed = JSON.parse(lesson.objectives);
+              return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+              return [];
+            }
+          })()
         })),
         ...assignments.map(assignment => ({
           id: `assignment-${assignment.id}`,
           title: assignment.title,
           type: 'assignment',
-          date: assignment.dueDate || assignment.createdAt,
+          date: assignment.dueDate || assignment.createdAt || new Date().toISOString(),
           time: '14:00',
           status: 'scheduled',
           description: assignment.description,
@@ -59,7 +72,16 @@ const Schedule = () => {
           duration: `${assignment.estimatedDuration || 30} minutes`,
           classroom: 'Virtual Classroom',
           students: assignment.totalStudents || 0,
-          objectives: assignment.objectives ? JSON.parse(assignment.objectives) : []
+          objectives: (() => {
+            if (!assignment.objectives) return [];
+            if (Array.isArray(assignment.objectives)) return assignment.objectives;
+            try {
+              const parsed = JSON.parse(assignment.objectives);
+              return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+              return [];
+            }
+          })()
         }))
       ];
 

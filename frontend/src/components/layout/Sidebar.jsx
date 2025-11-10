@@ -7,32 +7,22 @@ const Sidebar = ({ user, onLogout, isOpen, onClose }) => {
       { path: '/dashboard', label: 'Dashboard', exact: true }
     ];
 
+    const teacherItems = [
+      ...baseItems,
+      { path: '/dashboard/students', label: 'Students' },
+      { path: '/dashboard/register-student', label: 'Register Student' },
+      { path: '/dashboard/lessons', label: 'Lessons' },
+      { path: '/dashboard/assignments', label: 'Assignments' },
+      { path: '/dashboard/analytics', label: 'Analytics' },
+      { path: '/dashboard/schedule', label: 'Schedule' }
+    ];
+
     switch (role) {
       case 'admin':
-        return [
-          ...baseItems,
-          { path: '/dashboard/users', label: 'User Management' },
-          { path: '/dashboard/content', label: 'Content Management' },
-          { path: '/dashboard/analytics', label: 'Analytics' },
-          { path: '/dashboard/settings', label: 'Settings' },
-          { path: '/dashboard/reports', label: 'Reports' }
-        ];
+        return teacherItems;
       
       case 'teacher':
-        return [
-          ...baseItems,
-          { path: '/dashboard/students', label: 'Students' },
-          { path: '/dashboard/register-student', label: 'Register Student' },
-          { path: '/dashboard/lessons', label: 'Lessons' },
-          { path: '/dashboard/assignments', label: 'Assignments' },
-          { path: '/dashboard/analytics', label: 'Analytics' },
-          { path: '/dashboard/schedule', label: 'Schedule' },
-          // Admin functionalities now available in teacher dashboard
-          { path: '/dashboard/users', label: 'User Management' },
-          { path: '/dashboard/content', label: 'Content Management' },
-          { path: '/dashboard/settings', label: 'Settings' },
-          { path: '/dashboard/reports', label: 'Reports' }
-        ];
+        return teacherItems;
       
       case 'learner':
         return [

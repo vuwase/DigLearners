@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useSound } from '../../lib/soundEffects';
-import learnerApiService from '../../services/learnerApiService';
+import gamifiedApiService from '../../services/gamifiedApiService';
 import './GamePlayer.css';
 
 const GamePlayer = () => {
@@ -64,56 +64,21 @@ const GamePlayer = () => {
       console.log('[GamePlayer] Score:', finalScore);
       console.log('[GamePlayer] Points reward:', game.pointsReward || 10);
       
-      // Try using the learner progress endpoint first
-      try {
-        const progressData = {
-          lessonId: game.id || `game-${game.id}`,
-          score: finalScore,
-          timeSpent: timeSpent,
-          isCompleted: true,
-          progressPercentage: 100
-        };
-        
-        console.log('[GamePlayer] Sending progress data:', progressData);
-        const response = await learnerApiService.updateProgress(game.id || `game-${game.id}`, progressData);
-        console.log('[GamePlayer] Progress update response:', response);
-        
-        // Check if badges were awarded
-        if (response?.newBadges && response.newBadges.length > 0) {
-          console.log('🎉 Badges awarded:', response.newBadges);
-          localStorage.setItem('newBadges', JSON.stringify(response.newBadges));
-          localStorage.setItem('refreshAchievements', 'true');
-        }
-        
-        // Also check data.newBadges
-        if (response?.data?.newBadges && response.data.newBadges.length > 0) {
-          console.log('🎉 Badges in data.newBadges:', response.data.newBadges);
-          localStorage.setItem('newBadges', JSON.stringify(response.data.newBadges));
-          localStorage.setItem('refreshAchievements', 'true');
-        }
-        
-        // Update user points if returned
-        if (response?.data?.progress) {
-          const user = JSON.parse(localStorage.getItem('user') || '{}');
-          if (response.data.progress.totalPoints) {
-            user.totalPoints = response.data.progress.totalPoints;
-            localStorage.setItem('user', JSON.stringify(user));
-          }
-        }
-        
-      } catch (progressError) {
-        console.warn('[GamePlayer] Progress update failed:', progressError);
-        // Try alternative: directly update user points
-        try {
-          const user = JSON.parse(localStorage.getItem('user') || '{}');
-          const currentPoints = user.totalPoints || 0;
-          const pointsToAdd = game.pointsReward || 10;
-          user.totalPoints = currentPoints + pointsToAdd;
-          localStorage.setItem('user', JSON.stringify(user));
-          console.log('[GamePlayer] Updated user points locally:', user.totalPoints);
-        } catch (pointError) {
-          console.warn('[GamePlayer] Could not update points:', pointError);
-        }
+      const response = await gamifiedApiService.saveProgress({
+        contentId: game.id,
+        score: finalScore,
+        timeSpent,
+        progressPercentage: 100,
+        isCompleted: true
+      });
+      console.log('[GamePlayer] Gamified progress response:', response);
+      
+      const awardedBadges = response?.newBadges || response?.data?.newBadges || [];
+      if (awardedBadges.length > 0) {
+        console.log('🎉 Badges awarded:', awardedBadges);
+        localStorage.setItem('newBadges', JSON.stringify(awardedBadges));
+        localStorage.setItem('refreshAchievements', 'true');
+        localStorage.setItem('refreshDashboard', 'true');
       }
       
     } catch (error) {
