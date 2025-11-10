@@ -1,7 +1,8 @@
 // Gamified Content API - Handles grade-based educational games
 const express = require('express');
-const { GamifiedContent, User } = require('../models');
-const { authenticateToken } = require('../middleware/auth');
+const { GamifiedContent, User, GamifiedProgress, Badge, UserBadge } = require('../models');
+const { authenticateToken, requireLearner } = require('../middleware/auth');
+const { notifyTeachersOfStudentActivity } = require('../services/teacherNotificationService');
 
 const router = express.Router();
 
@@ -293,6 +294,163 @@ router.post('/create', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Internal server error'
+    });
+  }
+});
+
+// Record gamified content progress for learners
+router.post('/progress', authenticateToken, requireLearner, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const {
+      contentId,
+      score = 0,
+      progressPercentage = 0,
+      timeSpent = 0,
+      isCompleted = false
+    } = req.body;
+
+    if (!contentId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Content ID is required'
+      });
+    }
+
+    const content = await GamifiedContent.findByPk(contentId);
+    if (!content) {
+      return res.status(404).json({
+        success: false,
+        error: 'Gamified content not found'
+      });
+    }
+
+    const completionStatus = isCompleted || progressPercentage >= 100;
+
+    let progress = await GamifiedProgress.findOne({
+      where: { userId, contentId }
+    });
+
+    if (progress) {
+      progress = await progress.recordProgress({
+        score,
+        timeSpent,
+        progressPercentage,
+        isCompleted: completionStatus
+      });
+    } else {
+      progress = await GamifiedProgress.create({
+        userId,
+        contentId,
+        score,
+        timeSpent,
+        progressPercentage: Math.min(progressPercentage, 100),
+        isCompleted: completionStatus,
+        completionDate: completionStatus ? new Date() : null,
+        lastAccessedAt: new Date()
+      });
+    }
+
+    const updatedProgress = await GamifiedProgress.findByPk(progress.id, {
+      include: [
+        {
+          model: GamifiedContent,
+          as: 'content'
+        }
+      ]
+    });
+
+    const newBadges = [];
+
+    if (completionStatus) {
+      // Update user total points
+      const user = await User.findByPk(userId);
+      if (user) {
+        await user.increment('totalPoints', {
+          by: content.pointsReward || 10
+        });
+      }
+
+      if (content.badgeReward) {
+        const [badge] = await Badge.findOrCreate({
+          where: { name: content.badgeReward },
+          defaults: {
+            description: `Earned by completing ${content.title}`,
+            criteria: `Complete the gamified activity "${content.title}"`,
+            icon: '🏆',
+            points: content.pointsReward || 10,
+            category: 'achievement',
+            requirements: null
+          }
+        });
+
+        const existingUserBadge = await UserBadge.findOne({
+          where: {
+            userId,
+            badgeId: badge.id
+          }
+        });
+
+        if (!existingUserBadge) {
+          const awardedBadge = await UserBadge.create({
+            userId,
+            badgeId: badge.id,
+            awardedAt: new Date()
+          });
+
+          if (user) {
+            await user.increment('totalPoints', { by: badge.points });
+          }
+
+          newBadges.push({
+            id: awardedBadge.id,
+            badgeId: badge.id,
+            name: badge.name,
+            description: badge.description,
+            icon: badge.icon,
+            points: badge.points,
+            category: badge.category,
+            awardedAt: awardedBadge.awardedAt
+          });
+        }
+      }
+
+      await notifyTeachersOfStudentActivity({
+        studentId: userId,
+        activityType: 'game',
+        title: content.title,
+        score,
+        points: content.pointsReward || 10,
+        badges: newBadges
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Progress recorded successfully',
+      data: {
+        id: updatedProgress.id,
+        contentId: updatedProgress.contentId,
+        score: updatedProgress.score,
+        progressPercentage: updatedProgress.progressPercentage,
+        isCompleted: updatedProgress.isCompleted,
+        completionDate: updatedProgress.completionDate,
+        timeSpent: updatedProgress.timeSpent,
+        content: {
+          id: updatedProgress.content.id,
+          title: updatedProgress.content.title,
+          gameType: updatedProgress.content.gameType,
+          badgeReward: updatedProgress.content.badgeReward,
+          pointsReward: updatedProgress.content.pointsReward
+        }
+      },
+      newBadges
+    });
+  } catch (error) {
+    console.error('Error recording gamified progress:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error recording progress'
     });
   }
 });

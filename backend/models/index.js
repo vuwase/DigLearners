@@ -24,6 +24,7 @@ const UserBadge = require('./UserBadge')(sequelize);
 const UserLearningClass = require('./UserLearningClass')(sequelize);
 const ClassLesson = require('./ClassLesson')(sequelize);
 const GamifiedContent = require('./GamifiedContent')(sequelize);
+const GamifiedProgress = require('./GamifiedProgress')(sequelize);
 
 // Define relationships based on ERD diagram
 
@@ -134,6 +135,25 @@ Lesson.belongsToMany(LearningClass, {
   foreignKey: 'lessonId', 
   otherKey: 'classId',
   as: 'classes' 
+});
+
+// Gamified progress relationships
+User.hasMany(GamifiedProgress, {
+  foreignKey: 'userId',
+  as: 'gamifiedProgress'
+});
+GamifiedProgress.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user'
+});
+
+GamifiedContent.hasMany(GamifiedProgress, {
+  foreignKey: 'contentId',
+  as: 'progress'
+});
+GamifiedProgress.belongsTo(GamifiedContent, {
+  foreignKey: 'contentId',
+  as: 'content'
 });
 
 // ClassLesson relationships
@@ -351,5 +371,6 @@ module.exports = {
   UserLearningClass,
   ClassLesson,
   GamifiedContent,
+  GamifiedProgress,
   initializeDatabase
 };

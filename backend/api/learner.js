@@ -1,9 +1,10 @@
 // Learner API - Student dashboard and functionality endpoints
 const express = require('express');
-const { User, Lesson, Progress, Badge, UserBadge, GamifiedContent, sequelize } = require('../models');
+const { User, Lesson, Progress, Badge, UserBadge, GamifiedContent, GamifiedProgress, sequelize } = require('../models');
 const { authenticateToken, requireLearner } = require('../middleware/auth');
 const { Op } = require('sequelize');
 const { Sequelize } = require('sequelize');
+const { notifyTeachersOfStudentActivity } = require('../services/teacherNotificationService');
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ router.get('/dashboard', authenticateToken, requireLearner, async (req, res) => 
       });
     }
 
-    // Get user's progress data (handle errors gracefully)
+    // Get user's lesson progress data (handle errors gracefully)
     let progressData = [];
     try {
       progressData = await Progress.findAll({
@@ -41,6 +42,24 @@ router.get('/dashboard', authenticateToken, requireLearner, async (req, res) => 
       progressData = [];
     }
 
+    // Get gamified progress data (handle errors gracefully)
+    let gamifiedProgress = [];
+    try {
+      gamifiedProgress = await GamifiedProgress.findAll({
+        where: { userId },
+        include: [
+          {
+            model: GamifiedContent,
+            as: 'content',
+            attributes: ['id', 'title', 'pointsReward', 'badgeReward', 'gameType']
+          }
+        ]
+      });
+    } catch (gamifiedError) {
+      console.error('Error fetching gamified progress data:', gamifiedError);
+      gamifiedProgress = [];
+    }
+
     // Calculate stats
     const totalPoints = user.totalPoints || 0;
     const completedLessons = progressData.filter(p => p.isCompleted).length;
@@ -48,6 +67,7 @@ router.get('/dashboard', authenticateToken, requireLearner, async (req, res) => 
     const averageScore = progressData.length > 0 
       ? Math.round(progressData.reduce((sum, p) => sum + (p.score || 0), 0) / progressData.length)
       : 0;
+    const completedGames = gamifiedProgress.filter(p => p.isCompleted).length;
 
     // Get recent badges (handle errors gracefully)
     let recentBadges = [];
@@ -79,10 +99,11 @@ router.get('/dashboard', authenticateToken, requireLearner, async (req, res) => 
         stats: {
           totalPoints,
           badgesEarned: recentBadges.length,
-          gamesCompleted: completedLessons,
+          gamesCompleted: completedGames,
           currentStreak: 0, // TODO: Implement streak calculation
           averageScore,
-          totalLessons
+          totalLessons,
+          gamifiedActivities: gamifiedProgress.length
         },
         recentBadges: recentBadges.map(ub => ({
           id: ub.badge.id,
@@ -346,13 +367,21 @@ router.post('/progress', authenticateToken, requireLearner, async (req, res) => 
 
     // Update user's total points if lesson is completed
     if (isCompleted && score) {
-      const user = await User.findByPk(userId);
+      const [user, lesson] = await Promise.all([
+        User.findByPk(userId),
+        Lesson.findByPk(lessonId)
+      ]);
+
+      const pointsAwarded = score * 10;
+
       if (user) {
         await user.update({
-          totalPoints: (user.totalPoints || 0) + (score * 10) // 10 points per score point
+          totalPoints: (user.totalPoints || 0) + pointsAwarded // 10 points per score point
         });
       }
       
+      let awardedBadges = [];
+
       // Check for badge eligibility and award badges when lesson is completed
       try {
         const eligibleBadges = await progress.calculateBadgeEligibility();
@@ -377,8 +406,19 @@ router.post('/progress', authenticateToken, requireLearner, async (req, res) => 
             console.log(`Badge ${badge.name} already awarded or error:`, error.message);
           }
         }
+
+        awardedBadges = newBadges;
         
         if (newBadges.length > 0) {
+          await notifyTeachersOfStudentActivity({
+            studentId: userId,
+            activityType: 'lesson',
+            title: lesson?.title || 'Lesson',
+            score,
+            points: pointsAwarded,
+            badges: newBadges
+          });
+
           return res.json({
             success: true,
             message: 'Progress updated successfully. Badges awarded!',
@@ -390,6 +430,15 @@ router.post('/progress', authenticateToken, requireLearner, async (req, res) => 
         console.error('Error checking badges:', badgeError);
         // Continue even if badge checking fails
       }
+
+      await notifyTeachersOfStudentActivity({
+        studentId: userId,
+        activityType: 'lesson',
+        title: lesson?.title || 'Lesson',
+        score,
+        points: pointsAwarded,
+        badges: awardedBadges
+      });
     }
 
     res.json({
