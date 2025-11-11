@@ -2,10 +2,6 @@ const express = require('express')
 const cors = require('cors')
 const path = require('path')
 const fs = require('fs')
-<<<<<<< HEAD
-=======
-const fs = require('fs')
->>>>>>> 98328cf (chore: configure Render deployment)
 
 // Import database models and initialization
 const { initializeDatabase } = require('./models')
@@ -16,15 +12,6 @@ if (!fs.existsSync(dataDirectory)) {
   fs.mkdirSync(dataDirectory, { recursive: true })
 }
 
-<<<<<<< HEAD
-=======
-// Ensure the SQLite storage directory exists (important for Render persistent disks)
-const dataDirectory = path.join(__dirname, 'data')
-if (!fs.existsSync(dataDirectory)) {
-  fs.mkdirSync(dataDirectory, { recursive: true })
-}
-
->>>>>>> 98328cf (chore: configure Render deployment)
 // Import API routes
 const authRoutes = require('./api/auth')
 const contentRoutes = require('./api/content')
