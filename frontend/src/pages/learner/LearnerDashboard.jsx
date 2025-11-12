@@ -17,6 +17,44 @@ const LearnerDashboard = () => {
   });
   const [recentBadges, setRecentBadges] = useState([]);
 
+  const dedupeContent = (items) => {
+    if (!Array.isArray(items)) return [];
+    const seen = new Set();
+    const normalizeTitle = (value = '') =>
+      value
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-');
+    const getKey = (item = {}) => {
+      const normalizedTitle = normalizeTitle(item.title || item.name || item.slug || '');
+      const normalizedGrade = normalizeTitle(item.grade || '');
+      if (normalizedTitle) {
+        return `${normalizedGrade}__${normalizedTitle}`;
+      }
+      if (item.id || item._id) return String(item.id || item._id);
+      return JSON.stringify(item);
+    };
+    return items.filter((item) => {
+      const key = getKey(item);
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  };
+
+  const filterDeprecatedContent = (items) => {
+    const shouldHide = (item = {}) => {
+      const grade = (item.grade || '').toLowerCase();
+      const title = (item.title || '').toLowerCase();
+      return grade === 'grade 2' && title === 'word building castle';
+    };
+
+    return items.filter((item) => !shouldHide(item));
+  };
+
   useEffect(() => {
     // Auto-set age group based on student's grade if available
     let selectedAgeGroup = localStorage.getItem('selectedAgeGroup');
@@ -98,7 +136,8 @@ const LearnerDashboard = () => {
         const response = await gamifiedApiService.getMyContent();
         const content = response.data || response;
         if (Array.isArray(content)) {
-          setGamifiedContent(content.slice(0, 6)); // Show top 6 games
+          const uniqueContent = filterDeprecatedContent(dedupeContent(content));
+          setGamifiedContent(uniqueContent.slice(0, 6)); // Show top 6 games
         } else {
           throw new Error('Invalid content format');
         }
@@ -111,7 +150,8 @@ const LearnerDashboard = () => {
             const response = await gamifiedApiService.getContentByAgeGroup(ageGroup);
             const content = response.data || response;
             if (Array.isArray(content)) {
-              setGamifiedContent(content.slice(0, 6)); // Show top 6 games
+              const uniqueContent = filterDeprecatedContent(dedupeContent(content));
+              setGamifiedContent(uniqueContent.slice(0, 6)); // Show top 6 games
             }
           } catch (ageError) {
             console.warn('Age group content fetch also failed:', ageError);

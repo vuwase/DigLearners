@@ -20,16 +20,14 @@ const LearnerLayout = ({ children }) => {
 
   return (
     <div className="learner-layout">
-      {/* Simple top bar for kids */}
       <header className="learner-header">
-        <div className="header-left">
-          <Link to="/dashboard" className="app-title-link">
-            <h1 className="app-title">🎮 DigLearners</h1>
-          </Link>
-        </div>
-        <div className="header-right">
-          <div className="user-info">
-            {/* Language Switcher */}
+        <div className="header-top">
+          <div className="header-left">
+            <Link to="/dashboard" className="app-title-link">
+              <h1 className="app-title">🎮 DigLearners</h1>
+            </Link>
+          </div>
+          <div className="header-right">
             <div className="language-switcher">
               <button 
                 className={`lang-btn ${language === 'en' ? 'active' : ''}`}
@@ -52,37 +50,35 @@ const LearnerLayout = ({ children }) => {
             </button>
           </div>
         </div>
+
+        <nav className="learner-nav">
+          <Link 
+            to="/dashboard" 
+            className={`nav-link ${location.pathname === '/dashboard' || location.pathname === '/dashboard/' ? 'active' : ''}`}
+          >
+            🏠 {t('nav.home') || 'My Dashboard'}
+          </Link>
+          <Link 
+            to="/dashboard/games" 
+            className={`nav-link ${isActive('/dashboard/games') ? 'active' : ''}`}
+          >
+            🎮 {t('nav.games') || 'Games'}
+          </Link>
+          <Link 
+            to="/dashboard/puzzles" 
+            className={`nav-link ${isActive('/dashboard/puzzles') ? 'active' : ''}`}
+          >
+            🧩 {t('nav.puzzles') || 'Puzzles'}
+          </Link>
+          <Link 
+            to="/dashboard/achievements" 
+            className={`nav-link ${isActive('/dashboard/achievements') ? 'active' : ''}`}
+          >
+            🏆 {t('nav.achievements') || 'Achievement'}
+          </Link>
+        </nav>
       </header>
 
-      {/* Simple navigation for kids */}
-      <nav className="learner-nav">
-        <Link 
-          to="/dashboard" 
-          className={`nav-link ${location.pathname === '/dashboard' || location.pathname === '/dashboard/' ? 'active' : ''}`}
-        >
-          🏠 {t('nav.home') || 'My Dashboard'}
-        </Link>
-        <Link 
-          to="/dashboard/games" 
-          className={`nav-link ${isActive('/dashboard/games') ? 'active' : ''}`}
-        >
-          🎮 {t('nav.games') || 'Games'}
-        </Link>
-        <Link 
-          to="/dashboard/puzzles" 
-          className={`nav-link ${isActive('/dashboard/puzzles') ? 'active' : ''}`}
-        >
-          🧩 {t('nav.puzzles') || 'Puzzles'}
-        </Link>
-        <Link 
-          to="/dashboard/achievements" 
-          className={`nav-link ${isActive('/dashboard/achievements') ? 'active' : ''}`}
-        >
-          🏆 {t('nav.achievements') || 'Achievement'}
-        </Link>
-      </nav>
-
-      {/* Main content area */}
       <main className="learner-main">
         {children}
       </main>

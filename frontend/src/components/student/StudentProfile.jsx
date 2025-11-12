@@ -47,6 +47,9 @@ const StudentProfile = ({ showFullProfile = false }) => {
     age: user?.age || 'Not set'
   };
 
+  const firstName = user?.fullName?.split(' ')[0] || 'Student';
+  const gradeLabel = user?.grade ? `Grade ${user.grade}` : null;
+
   if (showFullProfile) {
     return (
       <div className="student-profile-full">
@@ -92,15 +95,11 @@ const StudentProfile = ({ showFullProfile = false }) => {
 
   // Compact profile for header
   return (
-    <div className="student-profile-compact">
-      <div className="cartoon-avatar">
-        <div className="avatar-circle">
-          <span className="avatar-emoji">{cartoonAvatar}</span>
-        </div>
-        <div className="avatar-pulse"></div>
-      </div>
-      <div className="profile-name-compact">
-        <span className="name-text">{user?.fullName?.split(' ')[0] || 'Student'}</span>
+    <div className="student-chip" title={user?.fullName || 'Student'}>
+      <span className="student-chip-avatar" aria-hidden="true">{cartoonAvatar}</span>
+      <div className="student-chip-text">
+        <span className="student-chip-name">{firstName}</span>
+        {gradeLabel && <span className="student-chip-subtext">{gradeLabel}</span>}
       </div>
     </div>
   );

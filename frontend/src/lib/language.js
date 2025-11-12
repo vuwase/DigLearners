@@ -103,7 +103,22 @@ export const TRANSLATIONS = {
     // Accessibility
     'accessibility.large_text': 'Large Text',
     'accessibility.high_contrast': 'High Contrast',
-    'accessibility.audio_feedback': 'Audio Feedback'
+    'accessibility.audio_feedback': 'Audio Feedback',
+
+    // Teacher
+    'teacher.studentFullName': 'Student Full Name',
+    'teacher.enterStudentName': "Enter student's full name",
+    'teacher.school': 'School',
+    'teacher.selectSchool': 'Select a school',
+    'teacher.kigaliSchools': 'Kigali Schools',
+    'teacher.northernSchools': 'Northern Province Schools',
+    'teacher.southernSchools': 'Southern Province Schools',
+    'teacher.easternSchools': 'Eastern Province Schools',
+    'teacher.westernSchools': 'Western Province Schools',
+    'teacher.otherSchool': 'Other (Please specify)',
+    'teacher.schoolName': 'School Name',
+    'teacher.enterSchoolName': 'Enter school name',
+    'teacher.ageOptional': 'Age (optional)'
   },
   
   [LANGUAGES.RW]: {
@@ -201,7 +216,22 @@ export const TRANSLATIONS = {
     // Accessibility
     'accessibility.large_text': 'Inyandiko Nini',
     'accessibility.high_contrast': 'Gutandukanya Nini',
-    'accessibility.audio_feedback': 'Gusubira mu Majwi'
+    'accessibility.audio_feedback': 'Gusubira mu Majwi',
+
+    // Teacher
+    'teacher.studentFullName': "Amazina Yuzuye y'Umunyeshuri",
+    'teacher.enterStudentName': "Andika amazina yuzuye y'umunyeshuri",
+    'teacher.school': 'Ishuri',
+    'teacher.selectSchool': 'Hitamo ishuri',
+    'teacher.kigaliSchools': 'Amashuri ya Kigali',
+    'teacher.northernSchools': 'Amashuri y’Intara y’Amajyaruguru',
+    'teacher.southernSchools': 'Amashuri y’Intara y’Amajyepfo',
+    'teacher.easternSchools': 'Amashuri y’Intara y’Iburasirazuba',
+    'teacher.westernSchools': 'Amashuri y’Intara y’Iburengerazuba',
+    'teacher.otherSchool': 'Andi (Shyiramo izina)',
+    'teacher.schoolName': "Izina ry'Ishuri",
+    'teacher.enterSchoolName': "Andika izina ry'ishuri",
+    'teacher.ageOptional': 'Imyaka (si ngombwa)'
   }
 }
 

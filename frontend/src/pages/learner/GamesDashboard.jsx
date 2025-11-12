@@ -12,6 +12,34 @@ const GamesDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const dedupeContent = (items) => {
+    if (!Array.isArray(items)) return [];
+    const seen = new Set();
+    const normalizeTitle = (value = '') =>
+      value
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-');
+    const getKey = (item = {}) => {
+      const normalizedTitle = normalizeTitle(item.title || item.name || item.slug || '');
+      const normalizedGrade = normalizeTitle(item.grade || '');
+      if (normalizedTitle) {
+        return `${normalizedGrade}__${normalizedTitle}`;
+      }
+      if (item.id || item._id) return String(item.id || item._id);
+      return JSON.stringify(item);
+    };
+    return items.filter((item) => {
+      const key = getKey(item);
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  };
+
   const getNormalizedGrade = () => {
     const rawGrade = user?.grade || location.state?.grade;
     if (!rawGrade) return null;
@@ -79,7 +107,7 @@ const GamesDashboard = () => {
         }
       }
 
-      setContent(games);
+      setContent(dedupeContent(games));
     } catch (error) {
       setError('Failed to load games. Please try again.');
       console.error('Error fetching games:', error);

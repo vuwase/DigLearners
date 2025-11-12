@@ -17,8 +17,9 @@ services:
 
 staticSites:
   - name: diglearners-frontend
-    buildCommand: cd frontend && npm ci && npm run build
-    publishPath: frontend/dist
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    publishPath: dist
     envVars:
       - key: REACT_APP_API_URL
         fromService:

@@ -10,6 +10,44 @@ const PuzzlesDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const dedupeContent = (items) => {
+    if (!Array.isArray(items)) return [];
+    const seen = new Set();
+    const normalizeTitle = (value = '') =>
+      value
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-');
+    const getKey = (item = {}) => {
+      const normalizedTitle = normalizeTitle(item.title || item.name || item.slug || '');
+      const normalizedGrade = normalizeTitle(item.grade || '');
+      if (normalizedTitle) {
+        return `${normalizedGrade}__${normalizedTitle}`;
+      }
+      if (item.id || item._id) return String(item.id || item._id);
+      return JSON.stringify(item);
+    };
+    return items.filter((item) => {
+      const key = getKey(item);
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  };
+
+  const filterDeprecatedContent = (items) => {
+    const shouldHide = (item = {}) => {
+      const grade = (item.grade || '').toLowerCase();
+      const title = (item.title || '').toLowerCase();
+      return grade === 'grade 2' && title === 'word building castle';
+    };
+
+    return items.filter((item) => !shouldHide(item));
+  };
+
   const getNormalizedGrade = () => {
     const rawGrade = user?.grade;
     if (!rawGrade) return null;
@@ -70,7 +108,7 @@ const PuzzlesDashboard = () => {
         }
       }
 
-      setContent(puzzles);
+      setContent(filterDeprecatedContent(dedupeContent(puzzles)));
     } catch (error) {
       setError('Failed to load puzzles. Please try again.');
       console.error('Error fetching puzzles:', error);
