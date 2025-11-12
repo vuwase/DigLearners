@@ -1,18 +1,88 @@
 // Database Models Index - Sets up all models and relationships
 const { Sequelize } = require('sequelize');
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
-// Database configuration
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: process.env.NODE_ENV === 'test' ? ':memory:' : path.join(__dirname, '../../data/diglearners.db'),
-  logging: process.env.NODE_ENV === 'development' ? console.log : false,
-  define: {
+// Determine database storage path (allows overriding for persistent volumes)
+const resolveStoragePath = () => {
+  if (process.env.NODE_ENV === 'test') {
+    return ':memory:';
+  }
+
+  if (process.env.DATABASE_FILE) {
+    return process.env.DATABASE_FILE;
+  }
+
+  return path.join(process.cwd(), 'data', 'diglearners.db');
+};
+
+const ensureStoragePath = (targetPath) => {
+  if (targetPath === ':memory:') {
+    return targetPath;
+  }
+
+  const directory = path.dirname(targetPath);
+
+  try {
+    fs.mkdirSync(directory, { recursive: true });
+    return targetPath;
+  } catch (error) {
+    console.warn(
+      `[Database] Unable to create directory "${directory}" (${error.message}). Falling back to temporary storage.`
+    );
+    const fallbackPath = path.join(os.tmpdir(), 'diglearners.db');
+    fs.mkdirSync(path.dirname(fallbackPath), { recursive: true });
+    return fallbackPath;
+  }
+};
+
+const createSequelizeInstance = () => {
+  const logging = process.env.NODE_ENV === 'development' ? console.log : false;
+  const define = {
     timestamps: true,
     underscored: true,
     freezeTableName: true
+  };
+
+  if (process.env.DATABASE_URL) {
+    const useSsl =
+      process.env.DB_SSL === 'true' ||
+      process.env.DATABASE_SSL === 'true' ||
+      process.env.NODE_ENV === 'production';
+
+    const dialectOptions = useSsl
+      ? {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false
+          }
+        }
+      : undefined;
+
+    console.log('[Database] Using PostgreSQL connection via DATABASE_URL');
+
+    return new Sequelize(process.env.DATABASE_URL, {
+      dialect: 'postgres',
+      logging,
+      define,
+      dialectOptions
+    });
   }
-});
+
+  const storagePath = ensureStoragePath(resolveStoragePath());
+  console.log(`[Database] SQLite storage path: ${storagePath}`);
+
+  return new Sequelize({
+    dialect: 'sqlite',
+    storage: storagePath,
+    logging,
+    define
+  });
+};
+
+// Database configuration
+const sequelize = createSequelizeInstance();
 
 // Import all models
 const User = require('./User')(sequelize);
