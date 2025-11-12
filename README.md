@@ -373,6 +373,28 @@ npm run docker:up
 4. Configure environment variables
 5. Set up database
 
+### Environment Variables Reference
+
+Use these mappings when adding entries in Render → **Environment** → **Environment Variables** or when creating local `.env` files. The text in the first column is the **variable name**; replace the example in the second column with your own **value**.
+
+| Service | Variable (name) | Sample value (replace with yours) | Purpose |
+|---------|-----------------|-----------------------------------|---------|
+| Backend | `NODE_ENV` | `production` | Ensures production mode |
+| Backend | `PORT` | `10000` | Render injects this automatically, but keep for local deploys |
+| Backend | `DATABASE_FILE` | `/var/data/diglearners.db` | Points SQLite to the attached Render disk (remove if using Postgres) |
+| Backend | `DATABASE_URL` | `postgres://user:pass@host:5432/dbname` | Render Postgres connection string (use when no disk is attached) |
+| Backend | `DB_SSL` | `true` | Forces TLS for Postgres connections (Render Postgres requires it) |
+| Backend | `EMAIL_USER` | `noreply@example.com` | SMTP username or full email address used to send mail |
+| Backend | `EMAIL_PASSWORD` | `app-specific-password` | SMTP password or app password |
+| Backend | `EMAIL_HOST` | `smtp.gmail.com` | SMTP host address |
+| Backend | `EMAIL_PORT` | `465` | SMTP port (`465` SSL, `587` TLS) |
+| Backend | `EMAIL_FROM` | `DigLearners <noreply@example.com>` | Friendly “From” header shown to recipients |
+| Frontend | `REACT_APP_API_URL` | `https://diglearners-backend.onrender.com/api` | Base URL the React app uses for API calls |
+
+> Tip: In Render’s dashboard, type the variable name in the **Key** field and the sample value (with your own details) in the **Value** field.
+
+When you cannot attach a persistent disk (Render free tier), provision a free **Render PostgreSQL** instance, copy its `DATABASE_URL`, set `DB_SSL=true`, and remove the `DATABASE_FILE` variable. The backend will auto-detect the URL and use Postgres instead of SQLite.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
