@@ -26,4 +26,3 @@ staticSites:
           type: web
           name: diglearners-backend
           property: url
-
