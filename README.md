@@ -26,10 +26,11 @@ DigLearners is a web-based platform that enhances foundational digital literacy 
 ### Backend
 - **Node.js**: JavaScript runtime for server-side development
 - **Express.js**: Web framework for RESTful API development
-- **SQLite**: Lightweight database for development and testing
+- **PostgreSQL (Render)**: Production database (SQLite used only for automated tests)
 - **Sequelize ORM**: Database modeling and query management
 - **JWT**: JSON Web Tokens for secure authentication
 - **bcrypt**: Password hashing and security
+- **Render**: Managed hosting for backend, frontend, and PostgreSQL
 
 ### Development Tools
 - **ESLint**: Code linting and style enforcement
@@ -94,45 +95,30 @@ frontend/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/diglearners/diglearners-platform.git
-   cd diglearners-platform
+   git clone https://github.com/vuwase/DigLearners.git
+   cd DigLearners
    ```
 
 2. **Install dependencies**
    ```bash
-   npm run install:all
+   npm install
+   cd backend && npm install && cd ..
+   cd frontend && npm install && cd ..
    ```
 
 3. **Start development servers**
    ```bash
-   npm run dev
+   npm run dev:backend   # runs nodemon on port 5000
+   npm run dev:frontend  # runs Vite on port 3000
    ```
 
-This will start:
-- Backend API server on http://localhost:5000
-- Frontend development server on http://localhost:3000
+Backend runs on <http://localhost:5000>, frontend on <http://localhost:3000>.  
+Ensure `backend/.env` points to your Render/Postgres instance (see Environment Variables section).
 
-### Test Login Credentials
+### Seed / Demo Access
 
-- Teacher/Admin access (Teacher UI with admin features if role=admin):
-  - Email: `testteacher@diglearners.com`
-  - Password: `password123`
-
-- Student access:
-  - Obtain a registration code from a teacher via `Dashboard → Register Student`
-  - Login at `/login?type=student` with: Full name, Grade, Registration Code
-
-### Default Login Credentials
-
-Admins log in via the Teacher login and use the Teacher dashboard.
-
-| Role | Email | Password | Access Notes |
-|------|-------|----------|--------------|
-| **Teacher/Admin** | `testteacher@diglearners.com` | `password123` | Admins have elevated permissions within the teacher dashboard |
-| **Teacher** | (create additional via admin tools) |  |  |
-| **Student** | Use registration code | N/A | Student login via name, grade, registration code |
-
-**Note**: Demo credentials are for development/testing. Replace in production.
+- During local development, run `node backend/create-teacher.js --fullName="Demo Teacher" --email=demo.teacher@example.com --password="DemoPass!123" --role=teacher` to create a login.
+- Student accounts are created by teachers via `Teacher Dashboard → Register Student`, which issues a registration code for `/login?type=student`.
 
 ### Production Build
 
@@ -375,25 +361,21 @@ npm run docker:up
 
 ### Environment Variables Reference
 
-Use these mappings when adding entries in Render → **Environment** → **Environment Variables** or when creating local `.env` files. The text in the first column is the **variable name**; replace the example in the second column with your own **value**.
+Use these mappings when adding entries in Render → **Environment** → **Environment Variables** or when creating local `.env` files (`backend/.env`, `frontend/.env`):
 
-| Service | Variable (name) | Sample value (replace with yours) | Purpose |
-|---------|-----------------|-----------------------------------|---------|
-| Backend | `NODE_ENV` | `production` | Ensures production mode |
-| Backend | `PORT` | `10000` | Render injects this automatically, but keep for local deploys |
-| Backend | `DATABASE_FILE` | `/var/data/diglearners.db` | Points SQLite to the attached Render disk (remove if using Postgres) |
-| Backend | `DATABASE_URL` | `postgres://user:pass@host:5432/dbname` | Render Postgres connection string (use when no disk is attached) |
-| Backend | `DB_SSL` | `true` | Forces TLS for Postgres connections (Render Postgres requires it) |
-| Backend | `EMAIL_USER` | `noreply@example.com` | SMTP username or full email address used to send mail |
-| Backend | `EMAIL_PASSWORD` | `app-specific-password` | SMTP password or app password |
-| Backend | `EMAIL_HOST` | `smtp.gmail.com` | SMTP host address |
-| Backend | `EMAIL_PORT` | `465` | SMTP port (`465` SSL, `587` TLS) |
-| Backend | `EMAIL_FROM` | `DigLearners <noreply@example.com>` | Friendly “From” header shown to recipients |
-| Frontend | `REACT_APP_API_URL` | `https://diglearners-backend.onrender.com/api` | Base URL the React app uses for API calls |
+| Service | Variable | Description |
+|---------|----------|-------------|
+| Backend | `NODE_ENV` | `production` in Render; `development` locally |
+| Backend | `PORT` | `10000` (Render sets automatically) |
+| Backend | `DATABASE_URL` | e.g. `postgresql://...@dpg-.../vaste_uwase` (Render Postgres connection string) |
+| Backend | `DB_DIALECT` | `postgres` |
+| Backend | `DB_SSL` | `true` (Render Postgres requires TLS) |
+| Backend | `JWT_SECRET` | Strong random secret shared between environments |
+| Backend | `EMAIL_USER`, `EMAIL_PASSWORD`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_FROM` | SMTP configuration (optional) |
+| Backend | `FRONTEND_URL` | `https://diglearners-frontend.onrender.com` |
+| Frontend | `REACT_APP_API_URL` | `https://diglearners.onrender.com/api` |
 
-> Tip: In Render’s dashboard, type the variable name in the **Key** field and the sample value (with your own details) in the **Value** field.
-
-When you cannot attach a persistent disk (Render free tier), provision a free **Render PostgreSQL** instance, copy its `DATABASE_URL`, set `DB_SSL=true`, and remove the `DATABASE_FILE` variable. The backend will auto-detect the URL and use Postgres instead of SQLite.
+`backend/.env.example` and `frontend/.env.example` include production-ready samples. Update local `.env` files with your secrets; they are git-ignored.
 
 ## License
 
