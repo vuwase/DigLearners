@@ -1,88 +1,68 @@
 // Database Models Index - Sets up all models and relationships
 const { Sequelize } = require('sequelize');
-const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
-// Determine database storage path (allows overriding for persistent volumes)
-const resolveStoragePath = () => {
-  if (process.env.NODE_ENV === 'test') {
-    return ':memory:';
-  }
+// Database configuration
+const logging = process.env.NODE_ENV === 'development' ? console.log : false;
+const isPostgres = (process.env.DB_DIALECT || '').toLowerCase() === 'postgres';
+const useDatabaseUrl = Boolean(process.env.DATABASE_URL);
 
-  if (process.env.DATABASE_FILE) {
-    return process.env.DATABASE_FILE;
-  }
-
-  return path.join(process.cwd(), 'data', 'diglearners.db');
+const defineOptions = {
+  timestamps: true,
+  underscored: true,
+  freezeTableName: true
 };
 
-const ensureStoragePath = (targetPath) => {
-  if (targetPath === ':memory:') {
-    return targetPath;
+const getDialectOptions = () => {
+  if (!isPostgres) {
+    return {};
   }
 
-  const directory = path.dirname(targetPath);
-
-  try {
-    fs.mkdirSync(directory, { recursive: true });
-    return targetPath;
-  } catch (error) {
-    console.warn(
-      `[Database] Unable to create directory "${directory}" (${error.message}). Falling back to temporary storage.`
-    );
-    const fallbackPath = path.join(os.tmpdir(), 'diglearners.db');
-    fs.mkdirSync(path.dirname(fallbackPath), { recursive: true });
-    return fallbackPath;
+  const sslRequired = (process.env.DB_SSL || 'true').toLowerCase() === 'true';
+  if (!sslRequired) {
+    return {};
   }
-};
 
-const createSequelizeInstance = () => {
-  const logging = process.env.NODE_ENV === 'development' ? console.log : false;
-  const define = {
-    timestamps: true,
-    underscored: true,
-    freezeTableName: true
+  return {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
   };
+};
 
-  if (process.env.DATABASE_URL) {
-    const useSsl =
-      process.env.DB_SSL === 'true' ||
-      process.env.DATABASE_SSL === 'true' ||
-      process.env.NODE_ENV === 'production';
+let sequelize;
 
-    const dialectOptions = useSsl
-      ? {
-          ssl: {
-            require: true,
-            rejectUnauthorized: false
-          }
-        }
-      : undefined;
-
-    console.log('[Database] Using PostgreSQL connection via DATABASE_URL');
-
-    return new Sequelize(process.env.DATABASE_URL, {
+if (useDatabaseUrl) {
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    logging,
+    define: defineOptions,
+    dialectOptions: getDialectOptions()
+  });
+} else if (isPostgres) {
+  sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASSWORD,
+    {
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
       dialect: 'postgres',
       logging,
-      define,
-      dialectOptions
-    });
-  }
-
-  const storagePath = ensureStoragePath(resolveStoragePath());
-  console.log(`[Database] SQLite storage path: ${storagePath}`);
-
-  return new Sequelize({
+      define: defineOptions,
+      dialectOptions: getDialectOptions()
+    }
+  );
+} else {
+  sequelize = new Sequelize({
     dialect: 'sqlite',
-    storage: storagePath,
+    storage: process.env.NODE_ENV === 'test'
+      ? ':memory:'
+      : path.join(__dirname, '../../data/diglearners.db'),
     logging,
-    define
+    define: defineOptions
   });
-};
-
-// Database configuration
-const sequelize = createSequelizeInstance();
+}
 
 // Import all models
 const User = require('./User')(sequelize);
