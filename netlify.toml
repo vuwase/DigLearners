@@ -1,7 +1,7 @@
 [build]
   base = "frontend"
   command = "npm install && npm run build"
-  publish = "frontend/dist"
+  publish = "dist"
 
 [build.environment]
   REACT_APP_API_URL = "https://diglearners.onrender.com/api"
