@@ -1,5 +1,9 @@
+/* Apply global font */
+* {
+  font-family: "Poppins", sans-serif;
+}
 /* DigLearners - Child-Friendly Design System */
-:root {
+: root {
   /* Primary Colors - Bright and engaging for children */
   --primary: #0ea5a4;
   --primary-light: #14b8a6;
