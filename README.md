@@ -359,6 +359,19 @@ npm run docker:up
 4. Configure environment variables
 5. Set up database
 
+### Netlify (Frontend) + Render (Backend)
+1. **Keep backend on Render** – `https://diglearners.onrender.com` already exposes all `/api/*` routes. Confirm environment variables (`DATABASE_URL`, `DB_SSL`, `JWT_SECRET`, etc.) remain configured there.
+2. **Connect repository to Netlify**  
+   - Create a new Netlify site → “Import from Git”.  
+   - Repo: `vuwase/DigLearners`, branch: `main`.  
+   - Netlify auto-detects `netlify.toml`:
+     - Base directory: `frontend`
+     - Build command: `npm install && npm run build`
+     - Publish directory: `frontend/dist`
+3. **Environment variable** – In Netlify → Site configuration → Environment variables, set `REACT_APP_API_URL=https://diglearners.onrender.com/api` (overrides the value in `netlify.toml` if needed).
+4. **SPA routing** – `netlify.toml` already defines `/* -> /index.html`, so client-side routing works.
+5. **Deploy** – Trigger “Deploy site”. Future pushes to `main` rebuild the frontend on Netlify while the backend stays on Render.
+
 ### Environment Variables Reference
 
 Use these mappings when adding entries in Render → **Environment** → **Environment Variables** or when creating local `.env` files (`backend/.env`, `frontend/.env`):
