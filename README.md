@@ -13,6 +13,11 @@ DigLearners is a web-based platform that enhances foundational digital literacy 
 - **Child-Friendly Design**: Large touch targets, high contrast, and accessibility features
 - **Research Analytics**: Comprehensive data collection for educational research
 
+## 🌐 Live Deployments
+
+- **Frontend (Netlify)**: <https://diglearners.netlify.app/>
+- **Backend API (Render)**: <https://diglearners.onrender.com/api>
+
 ## 🛠️ Technology Stack
 
 ### Frontend
@@ -371,6 +376,7 @@ npm run docker:up
 3. **Environment variable** – In Netlify → Site configuration → Environment variables, set `REACT_APP_API_URL=https://diglearners.onrender.com/api` (overrides the value in `netlify.toml` if needed).
 4. **SPA routing** – `netlify.toml` already defines `/* -> /index.html`, so client-side routing works.
 5. **Deploy** – Trigger “Deploy site”. Future pushes to `main` rebuild the frontend on Netlify while the backend stays on Render.
+6. **Live URL** – The production frontend is served from <https://diglearners.netlify.app/>.
 
 ### Environment Variables Reference
 
@@ -385,7 +391,7 @@ Use these mappings when adding entries in Render → **Environment** → **Envir
 | Backend | `DB_SSL` | `true` (Render Postgres requires TLS) |
 | Backend | `JWT_SECRET` | Strong random secret shared between environments |
 | Backend | `EMAIL_USER`, `EMAIL_PASSWORD`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_FROM` | SMTP configuration (optional) |
-| Backend | `FRONTEND_URL` | `https://diglearners-frontend.onrender.com` |
+| Backend | `FRONTEND_URL` | `https://diglearners.netlify.app` |
 | Frontend | `REACT_APP_API_URL` | `https://diglearners.onrender.com/api` |
 
 `backend/.env.example` and `frontend/.env.example` include production-ready samples. Update local `.env` files with your secrets; they are git-ignored.
