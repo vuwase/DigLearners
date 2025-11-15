@@ -6,11 +6,25 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 20000, // Render cold-starts can take a few seconds; keep UX responsive
   headers: {
     'Content-Type': 'application/json'
   }
 })
+
+const buildReadableError = (error, defaultMessage) => {
+  if (!error.response) {
+    if (error.code === 'ECONNABORTED') {
+      return 'Request timed out. Please try again in a moment.'
+    }
+    if (error.message?.includes('Network Error') || error.message?.includes('Failed to fetch')) {
+      return 'Unable to reach the server. Please check your internet connection.'
+    }
+    return defaultMessage
+  }
+
+  return error.response?.data?.error || defaultMessage
+}
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
@@ -233,12 +247,20 @@ export const authService = {
   },
 
   async requestPasswordReset(email) {
-    const response = await api.post('/auth/forgot-password', { email })
-    return response.data
+    try {
+      const response = await api.post('/auth/forgot-password', { email })
+      return response.data
+    } catch (error) {
+      throw new Error(buildReadableError(error, 'Unable to send reset link right now. Please try again.'))
+    }
   },
 
   async resetPassword({ token, password }) {
-    const response = await api.post('/auth/reset-password', { token, password })
-    return response.data
+    try {
+      const response = await api.post('/auth/reset-password', { token, password })
+      return response.data
+    } catch (error) {
+      throw new Error(buildReadableError(error, 'Unable to reset password. The link may have expired.'))
+    }
   }
 }

@@ -241,6 +241,12 @@ Admin UI has been removed. Admin capabilities (user/content management, analytic
 - **Student Profile Management**: Edit student grades and personal information
 - **Progress Analytics**: Comprehensive student progress monitoring
 
+### Account Recovery
+- **Forgot Password Flow**: Teachers can request a secure reset link from the login screen
+- **One-Time Tokens**: Backend issues hashed reset tokens that expire after 1 hour
+- **Email Notifications**: Reset emails are delivered via the configured SMTP account
+- **Reset Portal**: Dedicated `/reset-password` page to set a new credential
+
 ### Streamlined Student Experience
 - **Game-Focused Dashboard**: Simplified interface showing game cards directly
 - **Age Group Selection**: Personalized content based on age group selection

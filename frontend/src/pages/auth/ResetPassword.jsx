@@ -152,8 +152,10 @@ const ResetPassword = () => {
         .reset-password-form input {
           border: 2px solid #e2e8f0;
           border-radius: 12px;
-          padding: 0.85rem 1rem;
-          font-size: 1rem;
+            padding: 0.85rem 1rem;
+            font-size: 1rem;
+            color: #0f172a;
+            background: rgba(255,255,255,0.95);
         }
         .reset-password-form button {
           margin-top: 0.5rem;
@@ -165,6 +167,15 @@ const ResetPassword = () => {
           font-weight: 600;
           cursor: pointer;
           transition: transform 0.2s ease;
+        }
+
+        .reset-password-form input::placeholder {
+          color: #9ca3af;
+        }
+
+        .reset-password-form label {
+          color: #111827;
+          font-weight: 600;
         }
         .reset-password-form button:disabled {
           opacity: 0.6;

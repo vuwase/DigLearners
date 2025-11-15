@@ -105,6 +105,15 @@ const ForgotPassword = () => {
           background: linear-gradient(135deg, #FF9A8B, #FF6A88, #FF99AC);
           font-family: 'Poppins', 'Inter', sans-serif;
         }
+
+        .forgot-password-form label {
+          color: #111827;
+          font-weight: 600;
+        }
+
+        .forgot-password-form input::placeholder {
+          color: #9ca3af;
+        }
         .forgot-password-card {
           width: 100%;
           max-width: 480px;
