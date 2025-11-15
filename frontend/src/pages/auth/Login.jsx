@@ -19,7 +19,16 @@ const Login = ({ onLogin }) => {
 
   const handleStudentRegistration = (e) => {
     e.preventDefault()
-    navigate('/login?type=teacher')
+
+    // Force teacher login mode locally so the user sees the form immediately
+    setLoginType('teacher')
+    setError('')
+    setSuccess(false)
+
+    // Update the URL so refresh/bookmark keeps teacher context
+    if (location.search !== '?type=teacher') {
+      navigate('/login?type=teacher', { replace: false })
+    }
   }
 
   // Check URL parameters to auto-select login type
