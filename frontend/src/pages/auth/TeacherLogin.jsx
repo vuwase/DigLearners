@@ -1,6 +1,6 @@
 // Teacher Login Component - Email/Password Authentication
 import React, { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useLanguage } from '../../contexts/LanguageContext'
 
 const TeacherLogin = ({ 
@@ -13,6 +13,11 @@ const TeacherLogin = ({
   setSuccess 
 }) => {
   const { t } = useLanguage()
+  const translate = (key, fallback) => {
+    const value = t(key)
+    if (!value || value === key) return fallback
+    return value
+  }
   const navigate = useNavigate()
   const location = useLocation()
   const [formData, setFormData] = useState({
@@ -255,6 +260,11 @@ const TeacherLogin = ({
           required
           placeholder={t('auth.passwordPlaceholder')}
         />
+        <div className="forgot-password-link">
+          <Link to="/forgot-password">
+            {t('auth.forgotPassword') || 'Forgot password?'}
+          </Link>
+        </div>
       </div>
       
       <div className="form-group remember-me">
@@ -323,6 +333,22 @@ const TeacherLogin = ({
 
           .form-group {
             margin-bottom: 1.5rem;
+          }
+
+          .forgot-password-link {
+            margin-top: 0.5rem;
+            text-align: right;
+          }
+
+          .forgot-password-link a {
+            color: #2563eb;
+            font-size: 0.9rem;
+            text-decoration: none;
+            font-weight: 600;
+          }
+
+          .forgot-password-link a:hover {
+            text-decoration: underline;
           }
 
           .form-group label {

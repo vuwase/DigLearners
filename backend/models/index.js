@@ -75,6 +75,7 @@ const UserLearningClass = require('./UserLearningClass')(sequelize);
 const ClassLesson = require('./ClassLesson')(sequelize);
 const GamifiedContent = require('./GamifiedContent')(sequelize);
 const GamifiedProgress = require('./GamifiedProgress')(sequelize);
+const PasswordResetToken = require('./PasswordResetToken')(sequelize);
 
 // Define relationships based on ERD diagram
 
@@ -204,6 +205,16 @@ GamifiedContent.hasMany(GamifiedProgress, {
 GamifiedProgress.belongsTo(GamifiedContent, {
   foreignKey: 'contentId',
   as: 'content'
+});
+
+// Password reset relationships
+User.hasMany(PasswordResetToken, {
+  foreignKey: 'userId',
+  as: 'passwordResetTokens'
+});
+PasswordResetToken.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user'
 });
 
 // ClassLesson relationships
@@ -422,5 +433,6 @@ module.exports = {
   ClassLesson,
   GamifiedContent,
   GamifiedProgress,
+  PasswordResetToken,
   initializeDatabase
 };

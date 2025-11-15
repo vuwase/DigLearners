@@ -8,6 +8,8 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import Home from './pages/public/Home'
 import Login from './pages/auth/Login'
 import TeacherSignup from './pages/auth/TeacherSignup'
+import ForgotPassword from './pages/auth/ForgotPassword'
+import ResetPassword from './pages/auth/ResetPassword'
 import LearnerApp from './pages/learner/LearnerApp'
 import TeacherApp from './pages/teacher/TeacherApp'
 // AdminApp removed; admin users are routed into TeacherApp
@@ -186,6 +188,8 @@ function AppRoutes() {
           isAuthenticated ? <Navigate to="/dashboard" replace /> : <TeacherSignup />
         } 
       />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       
       {/* Legal Pages */}
       <Route path="/cookies" element={<CookiesPolicy />} />

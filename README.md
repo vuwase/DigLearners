@@ -15,6 +15,11 @@ DigLearners is a web-based platform that enhances foundational digital literacy 
 
 ## 🌐 Live Deployments
 
+- **Frontend (Netlify)**: [https://diglearners.netlify.app/](https://diglearners.netlify.app/)
+- **Backend API (Render)**: [https://diglearners.onrender.com/api](https://diglearners.onrender.com/api)
+
+## 🌐 Live Deployments
+
 - **Frontend (Netlify)**: <https://diglearners.netlify.app/>
 - **Backend API (Render)**: <https://diglearners.onrender.com/api>
 
@@ -376,6 +381,7 @@ npm run docker:up
 3. **Environment variable** – In Netlify → Site configuration → Environment variables, set `REACT_APP_API_URL=https://diglearners.onrender.com/api` (overrides the value in `netlify.toml` if needed).
 4. **SPA routing** – `netlify.toml` already defines `/* -> /index.html`, so client-side routing works.
 5. **Deploy** – Trigger “Deploy site”. Future pushes to `main` rebuild the frontend on Netlify while the backend stays on Render.
+6. **Live URL** – Production frontend is available at `https://diglearners.netlify.app/`. Update any references (e.g., `FRONTEND_URL`) to this domain.
 6. **Live URL** – The production frontend is served from <https://diglearners.netlify.app/>.
 
 ### Environment Variables Reference

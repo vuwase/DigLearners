@@ -2,13 +2,17 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { User } = require('../models');
+const crypto = require('crypto');
+const { Op } = require('sequelize');
+const { User, PasswordResetToken } = require('../models');
 const { authenticateToken } = require('../middleware/auth');
+const { sendEmail } = require('../services/emailService');
 
 const router = express.Router();
 
 // JWT Secret (should be in environment variables)
 const JWT_SECRET = process.env.JWT_SECRET || 'diglearners-secret-key-2024';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // Register endpoint 
 router.post('/register', async (req, res) => {
@@ -141,6 +145,152 @@ router.post('/register', async (req, res) => {
         name: error.name,
         message: error.message
       } : undefined
+    });
+  }
+});
+
+// Forgot password - send reset link
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body || {};
+
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      error: 'Email is required'
+    });
+  }
+
+  try {
+    const user = await User.findByEmail(email.trim());
+
+    if (!user || !user.email) {
+      // Return generic response to avoid account enumeration
+      return res.json({
+        success: true,
+        message: 'If an account exists for this email, a reset link has been sent.'
+      });
+    }
+
+    // Only allow password reset for teacher/admin accounts
+    if (user.role === 'learner') {
+      return res.json({
+        success: true,
+        message: 'If an account exists for this email, a reset link has been sent.'
+      });
+    }
+
+    // Invalidate previous tokens
+    await PasswordResetToken.update(
+      { usedAt: new Date() },
+      {
+        where: {
+          userId: user.id,
+          usedAt: { [Op.is]: null }
+        }
+      }
+    );
+
+    const rawToken = PasswordResetToken.generateToken();
+    const hashedToken = PasswordResetToken.hashToken(rawToken);
+
+    await PasswordResetToken.create({
+      userId: user.id,
+      tokenHash: hashedToken,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+    });
+
+    const resetLink = `${FRONTEND_URL.replace(/\/$/, '')}/reset-password?token=${rawToken}`;
+
+    await sendEmail({
+      to: user.email,
+      subject: 'DigLearners Password Reset',
+      text: [
+        'Hello!',
+        '',
+        'We received a request to reset your DigLearners password.',
+        'If you made this request, click the link below to set a new password:',
+        '',
+        resetLink,
+        '',
+        'This link will expire in 1 hour. If you did not request a password reset, you can safely ignore this email.',
+        '',
+        '— DigLearners Team'
+      ].join('\n'),
+      html: [
+        '<p>Hello,</p>',
+        '<p>We received a request to reset your DigLearners password.</p>',
+        '<p>If you made this request, click the button below to set a new password:</p>',
+        `<p><a href="${resetLink}" style="display:inline-block;padding:12px 20px;background:#f97316;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">Reset Password</a></p>`,
+        '<p>This link will expire in 1 hour. If you did not request a password reset, you can safely ignore this email.</p>',
+        '<p>— DigLearners Team</p>'
+      ].join('')
+    });
+
+    res.json({
+      success: true,
+      message: 'If an account exists for this email, a reset link has been sent.'
+    });
+  } catch (error) {
+    console.error('[Forgot Password] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Unable to process password reset request. Please try again later.'
+    });
+  }
+});
+
+// Reset password endpoint
+router.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body || {};
+
+  if (!token || !password) {
+    return res.status(400).json({
+      success: false,
+      error: 'Token and new password are required'
+    });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({
+      success: false,
+      error: 'Password must be at least 6 characters long'
+    });
+  }
+
+  try {
+    const hashedToken = PasswordResetToken.hashToken(token);
+    const tokenRecord = await PasswordResetToken.findOne({
+      where: {
+        tokenHash: hashedToken,
+        usedAt: { [Op.is]: null },
+        expiresAt: { [Op.gt]: new Date() }
+      },
+      include: [{ model: User, as: 'user' }]
+    });
+
+    if (!tokenRecord || !tokenRecord.user) {
+      return res.status(400).json({
+        success: false,
+        error: 'This reset link is invalid or has expired. Please request a new one.'
+      });
+    }
+
+    const user = tokenRecord.user;
+    user.password = password;
+    await user.save();
+
+    tokenRecord.usedAt = new Date();
+    await tokenRecord.save();
+
+    res.json({
+      success: true,
+      message: 'Password updated successfully. You can now log in with your new password.'
+    });
+  } catch (error) {
+    console.error('[Reset Password] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Unable to reset password. Please try again later.'
     });
   }
 });
