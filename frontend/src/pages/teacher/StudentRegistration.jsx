@@ -4,6 +4,12 @@ import teacherApiService from '../../services/teacherApiService';
 
 const StudentRegistration = () => {
   const { t } = useLanguage();
+  const translate = (key, fallback) => {
+    const value = t(key);
+    if (!value || typeof value !== 'string') return fallback;
+    if (value === key || value.includes('.')) return fallback;
+    return value;
+  };
   const [formData, setFormData] = useState({
     fullName: '',
     grade: '',
@@ -139,7 +145,7 @@ const StudentRegistration = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="school">{t('teacher.school') || 'School'} *</label>
+              <label htmlFor="school">{translate('teacher.school', 'School')} *</label>
               <select
                 id="school"
                 name="school"
@@ -147,8 +153,8 @@ const StudentRegistration = () => {
                 onChange={handleChange}
                 required
               >
-                <option value="">{t('teacher.selectSchool') || 'Select School'}</option>
-                <optgroup label={t('teacher.kigaliSchools') || 'Kigali Schools'}>
+                <option value="">{translate('teacher.selectSchool', 'Select school')}</option>
+                <optgroup label={translate('teacher.kigaliSchools', 'Kigali Schools')}>
                   <option value="Kacyiru Primary School">Kacyiru Primary School</option>
                   <option value="Groupe Scolaire Camp Kigali">Groupe Scolaire Camp Kigali</option>
                   <option value="Groupe Scolaire Kimironko II">Groupe Scolaire Kimironko II</option>
@@ -158,31 +164,31 @@ const StudentRegistration = () => {
                   <option value="Groupe Scolaire Kicukiro">Groupe Scolaire Kicukiro</option>
                   <option value="Kigali Parents School">Kigali Parents School</option>
                 </optgroup>
-                <optgroup label={t('teacher.northernSchools') || 'Northern Province Schools'}>
+                <optgroup label={translate('teacher.northernSchools', 'Northern Province Schools')}>
                   <option value="Groupe Scolaire Ruhengeri">Groupe Scolaire Ruhengeri</option>
                   <option value="Groupe Scolaire Muhoza">Groupe Scolaire Muhoza</option>
                   <option value="Groupe Scolaire Kinigi">Groupe Scolaire Kinigi</option>
                   <option value="Groupe Scolaire Busogo">Groupe Scolaire Busogo</option>
                 </optgroup>
-                <optgroup label={t('teacher.southernSchools') || 'Southern Province Schools'}>
+                <optgroup label={translate('teacher.southernSchools', 'Southern Province Schools')}>
                   <option value="Groupe Scolaire Butare Catholique">Groupe Scolaire Butare Catholique</option>
                   <option value="Groupe Scolaire Save">Groupe Scolaire Save</option>
                   <option value="Groupe Scolaire Nyanza">Groupe Scolaire Nyanza</option>
                   <option value="Groupe Scolaire Gikonko">Groupe Scolaire Gikonko</option>
                 </optgroup>
-                <optgroup label={t('teacher.easternSchools') || 'Eastern Province Schools'}>
+                <optgroup label={translate('teacher.easternSchools', 'Eastern Province Schools')}>
                   <option value="Groupe Scolaire Rwamagana Catholique">Groupe Scolaire Rwamagana Catholique</option>
                   <option value="Groupe Scolaire Kayonza Modern">Groupe Scolaire Kayonza Modern</option>
                   <option value="Groupe Scolaire Ngoma">Groupe Scolaire Ngoma</option>
                   <option value="Groupe Scolaire Nyagatare">Groupe Scolaire Nyagatare</option>
                 </optgroup>
-                <optgroup label={t('teacher.westernSchools') || 'Western Province Schools'}>
+                <optgroup label={translate('teacher.westernSchools', 'Western Province Schools')}>
                   <option value="Groupe Scolaire Gisenyi">Groupe Scolaire Gisenyi</option>
                   <option value="Groupe Scolaire Karongi A">Groupe Scolaire Karongi A</option>
                   <option value="Groupe Scolaire Bugarama">Groupe Scolaire Bugarama</option>
                   <option value="Groupe Scolaire Nyundo">Groupe Scolaire Nyundo</option>
                 </optgroup>
-                <option value="other">{t('teacher.otherSchool') || 'Other (Please specify)'}</option>
+                <option value="other">{translate('teacher.otherSchool', 'Other (Please specify)')}</option>
               </select>
             </div>
 

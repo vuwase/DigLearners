@@ -85,9 +85,34 @@ const Schedule = () => {
         }))
       ];
 
-      setSchedule(scheduleItems);
-      if (scheduleItems.length > 0) {
-        setSelectedSchedule(scheduleItems[0].id);
+      const fallbackSchedule = [
+        {
+          id: 'sample-1',
+          title: currentLanguage === 'rw' ? 'Isomo rya Digital Safety' : 'Digital Safety Workshop',
+          type: 'lesson',
+          date: new Date().toISOString(),
+          time: '09:00',
+          status: 'scheduled',
+          description: currentLanguage === 'rw'
+            ? 'Higisha abanyeshuri uko bakoresha ikoranabuhanga neza'
+            : 'Guide students through safe technology practices',
+          class: 'Grade 4',
+          subject: 'Digital Skills',
+          duration: '45 minutes',
+          classroom: 'Virtual Classroom',
+          students: 25,
+          objectives: [
+            'Discuss safe internet habits',
+            'Practice creating strong passwords'
+          ]
+        }
+      ];
+
+      const hydratedSchedule = scheduleItems.length > 0 ? scheduleItems : fallbackSchedule;
+
+      setSchedule(hydratedSchedule);
+      if (hydratedSchedule.length > 0) {
+        setSelectedSchedule(hydratedSchedule[0].id);
       }
     } catch (err) {
       console.error('Error fetching schedule:', err);
@@ -174,6 +199,11 @@ const Schedule = () => {
                 : 'Manage your teaching schedule and lessons'
               }
             </p>
+          <div className="schedule-controls">
+            <button className="action-btn secondary" onClick={fetchSchedule}>
+              {currentLanguage === 'rw' ? 'Kuvugurura gahunda' : 'Refresh schedule'}
+            </button>
+          </div>
           </div>
 
           {/* View Mode Toggle */}

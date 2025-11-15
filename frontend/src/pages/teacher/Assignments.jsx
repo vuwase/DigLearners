@@ -17,16 +17,16 @@ const Assignments = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({
     title: '',
-    subject: '',
+    subject: 'Literacy',
     grade: '',
     content: '',
     description: '',
     difficulty: 'beginner',
-    estimatedDuration: '',
+    estimatedDuration: '30',
     dueDate: '',
     assignmentType: 'lesson',
     puzzleType: '',
-    instructions: []
+    instructions: ''
   });
   const [showPuzzleCreator, setShowPuzzleCreator] = useState(false);
   const [puzzleData, setPuzzleData] = useState(null);
@@ -34,6 +34,14 @@ const Assignments = () => {
   useEffect(() => {
     fetchAssignments();
   }, [filterStatus]);
+
+  const gradesList = ['1', '2', '3', '4', '5', '6'];
+  const subjects = ['Literacy', 'Numeracy', 'Digital Skills', 'Citizenship', 'Science'];
+  const difficulties = [
+    { value: 'beginner', label: 'Beginner' },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'advanced', label: 'Advanced' }
+  ];
 
   const parseArrayField = (value) => {
     if (!value) return [];
@@ -99,7 +107,13 @@ const Assignments = () => {
     try {
       const assignmentData = {
         ...createForm,
-        content: puzzleData ? JSON.stringify(puzzleData) : createForm.content
+        content: puzzleData ? JSON.stringify(puzzleData) : createForm.content,
+        instructions: Array.isArray(createForm.instructions)
+          ? createForm.instructions
+          : createForm.instructions
+              .split('\n')
+              .map((line) => line.trim())
+              .filter(Boolean)
       };
       await teacherApiService.createAssignment(assignmentData);
       setShowCreateModal(false);
@@ -116,13 +130,21 @@ const Assignments = () => {
         dueDate: '',
         assignmentType: 'lesson',
         puzzleType: '',
-        instructions: []
+        instructions: ''
       });
       fetchAssignments();
     } catch (err) {
       console.error('Error creating assignment:', err);
       setError(err.message);
     }
+  };
+
+  const handleCreateInputChange = (e) => {
+    const { name, value } = e.target;
+    setCreateForm((prev) => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handlePuzzleSave = (puzzle) => {
@@ -169,7 +191,11 @@ const Assignments = () => {
             </p>
           </div>
           <div className="quick-actions-buttons">
-            <button className="quick-action-btn primary">
+            <button 
+              className="quick-action-btn primary"
+              onClick={() => setShowCreateModal(true)}
+              type="button"
+            >
               <div className="action-icon">➕</div>
               <div className="action-content">
                 <span className="action-title">
@@ -435,6 +461,169 @@ const Assignments = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {showCreateModal && (
+          <div className="edit-student-modal">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h3>{currentLanguage === 'rw' ? 'Tangiza Icyo Biteganyijwe' : 'Create Assignment'}</h3>
+                <button 
+                  className="modal-close"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setShowPuzzleCreator(false);
+                    setPuzzleData(null);
+                  }}
+                >
+                  ✖
+                </button>
+              </div>
+
+              <form className="create-assignment-form" onSubmit={handleFormSubmit}>
+                <div className="form-row">
+                  <label>
+                    {currentLanguage === 'rw' ? 'Umutwe' : 'Title'}
+                    <input
+                      type="text"
+                      name="title"
+                      value={createForm.title}
+                      onChange={handleCreateInputChange}
+                      required
+                    />
+                  </label>
+                  <label>
+                    {currentLanguage === 'rw' ? 'Icyiciro' : 'Subject'}
+                    <select
+                      name="subject"
+                      value={createForm.subject}
+                      onChange={handleCreateInputChange}
+                      required
+                    >
+                      {subjects.map((subject) => (
+                        <option key={subject} value={subject}>
+                          {subject}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    {currentLanguage === 'rw' ? 'Urwego' : 'Grade'}
+                    <select
+                      name="grade"
+                      value={createForm.grade}
+                      onChange={handleCreateInputChange}
+                      required
+                    >
+                      <option value="">{currentLanguage === 'rw' ? 'Hitamo urwego' : 'Select grade'}</option>
+                      {gradesList.map((grade) => (
+                        <option key={grade} value={grade}>
+                          {currentLanguage === 'rw' ? `Icyiciro cya ${grade}` : `Grade ${grade}`}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div className="form-row">
+                  <label>
+                    {currentLanguage === 'rw' ? 'Ishuri' : 'Type'}
+                    <select
+                      name="assignmentType"
+                      value={createForm.assignmentType}
+                      onChange={handleCreateInputChange}
+                    >
+                      <option value="lesson">Lesson</option>
+                      <option value="quiz">Quiz</option>
+                      <option value="project">Project</option>
+                      <option value="puzzle">Puzzle</option>
+                    </select>
+                  </label>
+                  <label>
+                    {currentLanguage === 'rw' ? 'Igihe cyateganyijwe' : 'Estimated Duration (minutes)'}
+                    <input
+                      type="number"
+                      name="estimatedDuration"
+                      value={createForm.estimatedDuration}
+                      onChange={handleCreateInputChange}
+                      min="10"
+                      max="120"
+                    />
+                  </label>
+                  <label>
+                    {currentLanguage === 'rw' ? 'Itariki' : 'Due Date'}
+                    <input
+                      type="date"
+                      name="dueDate"
+                      value={createForm.dueDate}
+                      onChange={handleCreateInputChange}
+                    />
+                  </label>
+                </div>
+
+                <label>
+                  {currentLanguage === 'rw' ? 'Ibisobanuro' : 'Description'}
+                  <textarea
+                    name="description"
+                    value={createForm.description}
+                    onChange={handleCreateInputChange}
+                    rows={2}
+                  />
+                </label>
+
+                <label>
+                  {currentLanguage === 'rw' ? 'Inyigisho' : 'Content'}
+                  <textarea
+                    name="content"
+                    value={createForm.content}
+                    onChange={handleCreateInputChange}
+                    rows={4}
+                    placeholder={currentLanguage === 'rw' ? 'Andika ibisobanuro by\'isomo...' : 'Describe the assignment content or paste lesson text'}
+                  />
+                </label>
+
+                <label>
+                  {currentLanguage === 'rw' ? 'Amabwiriza' : 'Instructions (one per line)'}
+                  <textarea
+                    name="instructions"
+                    value={
+                      Array.isArray(createForm.instructions)
+                        ? createForm.instructions.join('\n')
+                        : createForm.instructions
+                    }
+                    onChange={(e) =>
+                      setCreateForm((prev) => ({
+                        ...prev,
+                        instructions: e.target.value
+                      }))
+                    }
+                    rows={3}
+                  />
+                </label>
+
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="action-btn secondary"
+                    onClick={() => setShowCreateModal(false)}
+                  >
+                    {currentLanguage === 'rw' ? 'Kureka' : 'Cancel'}
+                  </button>
+                  <button className="action-btn primary" type="submit" disabled={loading}>
+                    {loading ? (currentLanguage === 'rw' ? 'Itegura...' : 'Saving...') : (currentLanguage === 'rw' ? 'Bika' : 'Save Assignment')}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showPuzzleCreator && (
+          <PuzzleCreator
+            onSave={handlePuzzleSave}
+            onCancel={() => setShowPuzzleCreator(false)}
+            initialData={puzzleData}
+          />
         )}
 
         {/* Summary Stats */}

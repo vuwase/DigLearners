@@ -19,11 +19,15 @@ const Login = ({ onLogin }) => {
 
   const handleStudentRegistration = (e) => {
     e.preventDefault()
+    const targetPath = '/dashboard/register-student'
+    
     if (isAuthenticated && (user?.role === 'teacher' || user?.role === 'admin')) {
-      navigate('/dashboard/register-student')
+      navigate(targetPath)
     } else {
-      // Redirect to teacher login first
-      navigate('/login?type=teacher')
+      // Redirect to teacher login and remember destination
+      navigate('/login?type=teacher', {
+        state: { redirectTo: targetPath }
+      })
     }
   }
 

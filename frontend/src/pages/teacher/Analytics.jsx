@@ -10,15 +10,16 @@ const Analytics = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedView, setSelectedView] = useState('overview');
+  const [period, setPeriod] = useState('week');
 
   useEffect(() => {
-    fetchAnalytics();
-  }, []);
+    fetchAnalytics(period);
+  }, [period]);
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (selectedPeriod = 'week') => {
     try {
       setLoading(true);
-      const response = await teacherApiService.getAnalytics();
+      const response = await teacherApiService.getAnalytics(selectedPeriod);
       const analytics = response.data || response || {};
       const defaultOverview = {
         totalStudents: 0,
@@ -129,6 +130,34 @@ const Analytics = () => {
               }
             </p>
           </div>
+        </div>
+
+        <div className="analytics-controls">
+          <div className="period-toggle">
+            {['week', 'month', 'quarter'].map((value) => (
+              <button
+                key={value}
+                className={`period-btn ${period === value ? 'active' : ''}`}
+                onClick={() => setPeriod(value)}
+                type="button"
+              >
+                {currentLanguage === 'rw'
+                  ? value === 'week'
+                    ? 'Icyumweru'
+                    : value === 'month'
+                      ? 'Ukwezi'
+                      : 'Igihembwe'
+                  : value === 'week'
+                    ? 'This week'
+                    : value === 'month'
+                      ? 'This month'
+                      : 'This term'}
+              </button>
+            ))}
+          </div>
+          <button className="action-btn secondary" onClick={() => fetchAnalytics(period)}>
+            {currentLanguage === 'rw' ? 'Kongera kuvugurura' : 'Refresh data'}
+          </button>
         </div>
 
         {/* View Tabs */}

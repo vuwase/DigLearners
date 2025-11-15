@@ -1,6 +1,6 @@
 // Teacher Login Component - Email/Password Authentication
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useLanguage } from '../../contexts/LanguageContext'
 
 const TeacherLogin = ({ 
@@ -14,6 +14,7 @@ const TeacherLogin = ({
 }) => {
   const { t } = useLanguage()
   const navigate = useNavigate()
+  const location = useLocation()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -148,14 +149,15 @@ const TeacherLogin = ({
         localStorage.setItem('authToken', result.token)
       }
       
+      const redirectPath = location.state?.redirectTo || '/dashboard'
+
       // Wait a bit longer to ensure auth state is updated, then redirect
       setTimeout(() => {
-        console.log('[TeacherLogin] Redirecting to dashboard...')
+        console.log('[TeacherLogin] Redirecting to', redirectPath)
         console.log('[TeacherLogin] Token check:', !!localStorage.getItem('authToken'))
         console.log('[TeacherLogin] User role:', result?.user?.role)
         
-        // Use window.location for more reliable redirect
-        window.location.href = '/dashboard'
+        navigate(redirectPath, { replace: true })
       }, 1500) // Increased delay to ensure everything is set
     } catch (err) {
       console.error('Login exception:', err)
@@ -288,6 +290,16 @@ const TeacherLogin = ({
           t('auth.login')
         )}
       </button>
+
+      <div className="login-help-card">
+        <h4>Need help?</h4>
+        <ul>
+          <li>Double-check the email your school used when creating the teacher account.</li>
+          <li>Passwords are case-sensitive. Make sure Caps Lock is off.</li>
+          <li>If you see a network or server error, confirm your internet connection and try again.</li>
+          <li>Still stuck? Contact the DigLearners support team for a quick reset.</li>
+        </ul>
+      </div>
 
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -565,6 +577,32 @@ const TeacherLogin = ({
           
           .remember-me-text {
             font-weight: 500;
+          }
+
+          .login-help-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            color: #374151;
+            font-size: 0.9rem;
+            line-height: 1.5;
+          }
+
+          .login-help-card h4 {
+            margin: 0 0 0.75rem 0;
+            font-size: 1rem;
+            color: #111827;
+          }
+
+          .login-help-card ul {
+            padding-left: 1.25rem;
+            margin: 0;
+          }
+
+          .login-help-card li {
+            margin-bottom: 0.35rem;
           }
         `
       }} />

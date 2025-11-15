@@ -383,6 +383,16 @@ const StudentLogin = ({
         </button>
       </div>
 
+      <div className="login-help-card">
+        <h4>Need help logging in?</h4>
+        <ul>
+          <li>Ask your teacher to confirm that your registration code is active.</li>
+          <li>The code is 6 letters or numbers. Enter it exactly as written.</li>
+          <li>If the page says “student not found,” the teacher must register you again.</li>
+          <li>Still having trouble? Refresh the page or contact DigLearners support.</li>
+        </ul>
+      </div>
+
       <style dangerouslySetInnerHTML={{
         __html: `
           .student-login-form {
@@ -767,6 +777,32 @@ const StudentLogin = ({
             to {
               width: 100%;
             }
+          }
+
+          .login-help-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            color: #374151;
+            font-size: 0.9rem;
+            line-height: 1.5;
+          }
+
+          .login-help-card h4 {
+            margin: 0 0 0.75rem 0;
+            font-size: 1rem;
+            color: #111827;
+          }
+
+          .login-help-card ul {
+            padding-left: 1.25rem;
+            margin: 0;
+          }
+
+          .login-help-card li {
+            margin-bottom: 0.35rem;
           }
 
           @media (max-width: 480px) {
