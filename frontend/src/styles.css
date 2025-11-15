@@ -518,7 +518,7 @@ button {
 }
 
 button:hover {
-  background: var(--primary-dark);
+  background: var(--secondary);
   transform: translateY(-1px);
 }
 
