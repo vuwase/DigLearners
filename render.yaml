@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: diglearners-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm ci
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+    disk:
+      name: diglearners-sqlite-data
+      mountPath: /opt/render/project/src/backend/data
+      sizeGB: 1
+
+staticSites:
+  - name: diglearners-frontend
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    publishPath: dist
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          type: web
+          name: diglearners-backend
+          property: url

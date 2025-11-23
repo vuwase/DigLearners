@@ -1,0 +1,16 @@
+{
+  "name": "DigLearners",
+  "short_name": "DigLearners",
+  "description": "Digital Literacy Platform for Rwandan Primary Schools",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5a4",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["education", "productivity"],
+  "icons": [],
+  "screenshots": [],
+  "shortcuts": []
+}
