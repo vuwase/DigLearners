@@ -6,7 +6,6 @@ A comprehensive digital literacy platform designed specifically for Rwandan prim
 
 DigLearners is a web-based platform that enhances foundational digital literacy in Rwandan primary schools through:
 
-- **Offline-First Architecture**: Works seamlessly in low-bandwidth and rural areas
 - **Gamification System**: Points, badges, levels, and leaderboards to motivate learning
 - **Multilingual Support**: English and Kinyarwanda language options
 - **Role-Based Access**: Interfaces for Learners and Teachers (Admins use the Teacher dashboard)
@@ -526,6 +525,7 @@ For support and questions:
   - Works offline
 
 ### 5. **Sample Data** ✓
+
 - **Default Users:**
   - Teacher/Admin: `teacher@diglearners.rw` / `teacher123`
 
