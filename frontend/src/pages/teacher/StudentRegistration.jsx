@@ -6,8 +6,9 @@ const StudentRegistration = () => {
   const { t } = useLanguage();
   const translate = (key, fallback) => {
     const value = t(key);
-    if (!value || typeof value !== 'string') return fallback;
-    if (value === key || value.includes('.')) return fallback;
+    // If translation is not found, t() returns the key itself
+    // So if value equals key, it means translation wasn't found
+    if (!value || typeof value !== 'string' || value === key) return fallback;
     return value;
   };
   const [formData, setFormData] = useState({

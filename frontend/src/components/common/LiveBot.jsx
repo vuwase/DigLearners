@@ -1,6 +1,7 @@
 // Live Bot Assistant for Kids
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useSound } from '../../lib/soundEffects'
+import { useAuth } from '../../contexts/AuthContext'
 import './LiveBot.css'
 
 const normalizeMessage = (message = '') =>
@@ -125,7 +126,7 @@ const fallbackResponses = [
   "Hmm, I want to get this perfect. Try asking about progress, badges, schedules, or any feature you see on the dashboard."
 ]
 
-const suggestionTopics = ['registering students', 'tracking progress', 'finding new games', 'earning badges', 'planning schedules', 'checking assignments']
+// Role-specific suggestion topics will be generated dynamically
 
 const MATCH_THRESHOLD = 1.4
 const questionWords = ['how', 'what', 'where', 'when', 'why', 'who', 'can', 'do', 'does', 'is', 'are', 'will', 'should']
@@ -167,6 +168,7 @@ const calculateEntryScore = (entry, normalizedMessage, tokens) => {
 }
 
 const LiveBot = () => {
+  const { user } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -175,6 +177,69 @@ const LiveBot = () => {
   const messagesEndRef = useRef(null)
   const synthRef = useRef(null)
   const { playClick, playSuccess } = useSound()
+  
+  // Filter knowledge base based on user role
+  const getFilteredKnowledgeBase = () => {
+    const userRole = user?.role
+    const isTeacher = userRole === 'teacher' || userRole === 'admin'
+    
+    // Common intents that both teachers and students can see
+    const commonIntents = [
+      'greeting',
+      'lessons_help',
+      'login_help',
+      'games_fun',
+      'thanks',
+      'goodbye'
+    ]
+    
+    if (isTeacher) {
+      // Teachers see: teacher-specific intents + common intents
+      const teacherOnlyIntents = [
+        'teacher_dashboard',
+        'register_student',
+        'assignments',
+        'analytics_progress',
+        'schedule_deadlines'
+      ]
+      return knowledgeBase.filter(entry => 
+        teacherOnlyIntents.includes(entry.intent) || commonIntents.includes(entry.intent)
+      )
+    } else {
+      // Students see: student-specific intents + common intents
+      const studentOnlyIntents = [
+        'student_dashboard',
+        'points_badges'
+      ]
+      return knowledgeBase.filter(entry => 
+        studentOnlyIntents.includes(entry.intent) || commonIntents.includes(entry.intent)
+      )
+    }
+  }
+  
+  // Get role-specific quick questions
+  const getRoleSpecificQuickQuestions = () => {
+    const userRole = user?.role
+    const isTeacher = userRole === 'teacher' || userRole === 'admin'
+    
+    if (isTeacher) {
+      // Teacher-specific questions only
+      return [
+        'How do I register a student?',
+        'How do assignments work?',
+        'How do I see class progress?',
+        'How do I plan my schedule?'
+      ]
+    } else {
+      // Student-specific questions only
+      return [
+        'Where do I see my progress?',
+        'Tips for earning more badges',
+        'What games can I play?',
+        'How do I complete a lesson?'
+      ]
+    }
+  }
 
   // Initialize speech synthesis
   useEffect(() => {
@@ -388,8 +453,9 @@ const LiveBot = () => {
     }
 
     const tokens = tokenizeMessage(rawMessage)
+    const filteredKnowledgeBase = getFilteredKnowledgeBase()
 
-    const match = knowledgeBase.reduce(
+    const match = filteredKnowledgeBase.reduce(
       (best, entry) => {
         const score = calculateEntryScore(entry, normalized, tokens)
         if (score > best.score) {
@@ -410,17 +476,21 @@ const LiveBot = () => {
     }
 
     const fallback = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)]
+    
+    // Get role-specific suggestion topics
+    const userRole = user?.role
+    const isTeacher = userRole === 'teacher' || userRole === 'admin'
+    const suggestionTopics = isTeacher
+      ? ['registering students', 'tracking class progress', 'planning schedules', 'checking assignments', 'creating lessons']
+      : ['tracking progress', 'finding new games', 'earning badges', 'completing lessons', 'playing games']
+    
     const picks = [...suggestionTopics].sort(() => 0.5 - Math.random()).slice(0, 2)
     const suggestionText = picks.join(' or ')
     return `${fallback}\n\nTry asking about ${suggestionText}.`
   }
 
-  const quickQuestions = [
-    'How do I register a student?',
-    'Where do I see my progress?',
-    'Tips for earning more badges',
-    'How do assignments work?'
-  ]
+  // Get role-specific quick questions
+  const roleSpecificQuickQuestions = getRoleSpecificQuickQuestions()
 
   // Cleanup: stop speech when component unmounts
   useEffect(() => {
@@ -512,7 +582,7 @@ const LiveBot = () => {
           </div>
 
           <div className="quick-questions">
-            {quickQuestions.map((question, index) => (
+            {roleSpecificQuickQuestions.map((question, index) => (
               <button
                 key={index}
                 className="quick-question-btn"
